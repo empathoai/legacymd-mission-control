@@ -1,0 +1,39 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# next.js
+.next/
+out/
+build/
+dist/
+
+# local env — never commit real credentials
+.env
+.env.*
+!.env.example
+
+# scratch
+.tmp/
+*.log
+
+# patient data — stays on disk, never in git history
+docs/*.xlsx
+docs/data/*.xlsx
+docs/data/customers.csv
+docs/data/customers-identities.md
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# python bytecode
+__pycache__/
+*.pyc
+# patient exports - never in git
+docs/*.csv
+# evidence screenshots
+shots/

@@ -1,0 +1,4 @@
+# Normalise line endings: the SQL files must stay LF (a BOM or CRLF breaks the
+# Management API) and the scripts run on Windows and Linux alike.
+* text=auto eol=lf
+*.xlsx binary

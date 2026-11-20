@@ -32,11 +32,17 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
 export async function requireUser(): Promise<SessionUser> {
   const user = await getSessionUser()
 
-  if (!user) {
-    redirect("/login")
+  if (user) {
+    return user
   }
 
-  return user
+  // Development runs without the gate on purpose (see proxy.ts): a screen can be
+  // reviewed with no password. A production build always asks for the session.
+  if (process.env.NODE_ENV !== "production") {
+    return { id: "dev", email: "dev@local" }
+  }
+
+  redirect("/login")
 }
 
 // Every write records who made it: the clinic account that is signed in.

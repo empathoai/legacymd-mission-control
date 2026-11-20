@@ -22,6 +22,7 @@ Out of scope: inventory, package composition, lifetime-value analytics, upsellin
 ## Tooling
 - **Verify the UI with Playwright, never by asking for a screenshot.** The app runs at `http://localhost:3000` (`next dev` in `web/`). Playwright is installed globally (`playwright` from npm global; Chromium under `%LOCALAPPDATA%\ms-playwright`). Open the page, force dark (`localStorage.theme = "dark"`), interact, screenshot, and read the image back before reporting a UI change.
 - **Use the installed component library for every control.** The UI is shadcn/ui over Base UI (`@base-ui/react`, `components/ui/*`). When a control is missing, add it with `pnpm exec shadcn add <name>`; never hand-roll a widget (native `<select>`, custom dropdown, custom input) when the library has one.
+- **The login gate is off in development and on in production.** `web/proxy.ts` skips the check when `NODE_ENV !== "production"`, so a screen can be reviewed with no password; a write made that way records `dev@local` as its actor. A build always asks for the clinic account.
 
 ## Where things live
 Next.js 16.4.5 + React 19 + shadcn/ui (Base UI) in `web/`; Supabase Postgres 17, project `konjxlatjymqrzebvtdu`. `pnpm dev` inside `web/`.

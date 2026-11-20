@@ -63,6 +63,8 @@ Ask this side about the base; do not change the base to fit a chart.
 
 ## Access model (decided 2026-11-19)
 
+**`pnpm dev` runs without a password on purpose.** `web/proxy.ts` skips the gate while `NODE_ENV !== "production"`, so the owner — or another agent reviewing the dashboards — opens the app straight away; a write made in that state records `dev@local` as its actor. A production build always asks for the clinic account (`empathoai@gmail.com`), and its password is reset from the Supabase dashboard.
+
 Server-only. `anon` and `authenticated` hold **no grants** on `public`, every view is
 `security_invoker`, and RLS stays enabled with zero policies as a second layer. The
 Next.js server uses the secret key (`service_role`, which bypasses RLS); the browser

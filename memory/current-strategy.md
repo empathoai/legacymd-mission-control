@@ -26,7 +26,7 @@ The date filter is `Day | Range | All`: Sales details defaults to today, the Pat
 
 A sale is written only through `create_sale(...)`: the sale, its frozen list prices, the payment plan and the receipts land atomically, `visit_number` and `is_first_visit` are derived, and a first visit requires a source. The immutable rule is written in `AGENTS.md`: the transactional base is never edited; corrections belong to the read layer or to a realignment procedure that uses the price and cost intervals.
 
-The app is behind `/login`: one clinic account, email and password, a cookie session that `web/proxy.ts` verifies with `auth.getClaims()` on every request, a signed-out visitor sent to `/login?next=…`, and Sign out in the sidebar footer next to the signed-in email. Every write records that email as its actor instead of the old fixed `front-desk`. The auth client prefers `SUPABASE_PUBLISHABLE_KEY` and falls back to the server-only `SUPABASE_SECRET_KEY` until the publishable key is in `web/.env.local`.
+A build is behind `/login`: one clinic account, email and password, a cookie session that `web/proxy.ts` verifies with `auth.getClaims()` on every request, a signed-out visitor sent to `/login?next=…`, and Sign out in the sidebar footer next to the signed-in email. **A development server runs without the gate** (`NODE_ENV !== "production"`), so the owner or another agent reviews a screen with no password; a write in that state records `dev@local`. Every write records the signed-in email as its actor instead of the old fixed `front-desk`. The auth client prefers `SUPABASE_PUBLISHABLE_KEY` and falls back to the server-only `SUPABASE_SECRET_KEY` until the publishable key is in `web/.env.local`.
 
 ## Next 30 days
 

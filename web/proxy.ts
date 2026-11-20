@@ -37,6 +37,13 @@ function redirectWith(to: URL, from: NextResponse) {
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request })
 
+  // The gate is for production. In development it stays open so the owner or
+  // another agent can review a screen without a password; a build is always
+  // gated, and a write still records an actor (see lib/auth.ts).
+  if (process.env.NODE_ENV !== "production") {
+    return response
+  }
+
   const supabase = createServerClient(url, key, {
     cookies: {
       getAll() {

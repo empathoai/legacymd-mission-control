@@ -39,6 +39,28 @@ Python with openpyxl: `C:\Users\aguaj\.dsh\dsh-runtimes\dsh-primary-runtime\depe
 | Checks | 19, with their negative controls; the baseline holds at 435 historical sales |
 | Remote | **none**: `git remote -v` is empty, so nothing is pushed |
 
+## Handover — the dashboards and the sales report
+
+**The owner is designing and building them with another LLM.** This session stops at the data contract: it keeps the base, the checks and the entry screens, and it answers questions. It does not draw the reporting surface.
+
+What the other side can read:
+
+| View | What it gives |
+|---|---|
+| `monthly_pl` | the month, gross revenue, cost of goods and margin |
+| `cash_collected` | money in, by month of receipt |
+| `monthly_money` | revenue, returned and net revenue per month |
+| `sale_money` | one row per sale: total, collected, returned, balance, voided |
+| `customer_balances` | per patient: sold, collected, balance, visits (distinct days), next due, overdue |
+| `item_profitability`, `item_monthly_profitability`, `refunded_by_item` | margin per item, per month, and what came back |
+| `catalog_items` | the 93 active items across the five kinds |
+
+Rules that hold whatever the screen shows: months group by `occurred_on`, never by `created_at`; a sale is never edited (a return is a new row, a void marks the sale); a patient may have several sales in a day and they share the visit ordinal; cash never includes a voided sale.
+
+Numbers on 2026-11-20: 215 patients, 435 sales, 588 lines, 435 receipts, 0 returns, **219.460,91** sold and collected, **0,00** owed, November **18.599,92**.
+
+Ask this side about the base; do not change the base to fit a chart.
+
 ## Access model (decided 2026-11-19)
 
 Server-only. `anon` and `authenticated` hold **no grants** on `public`, every view is

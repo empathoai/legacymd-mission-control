@@ -8,6 +8,17 @@ Punch list. One line per action, imperative, with the owner when it is not me. A
 
 ## Next
 
+### Pre-release review (2026-11-21) — blockers before publishing
+
+1. [ ] **Publishable key missing** (`web/.env.local`): the auth client and `proxy.ts` fall back to `SUPABASE_SECRET_KEY`, so the login runs with the master key. The value already exists in the root `.env.local`.
+2. [ ] **Mobile drawer does not close** (H1): navigating leaves it open over the new screen; the Close button is 0×0 and Escape does nothing. Owner's UI.
+3. [ ] **`/expenses/<period>` at 390 is 680 px wide** (H2): the filter strip does not wrap. Owner's UI.
+4. [ ] **Returns and Voids lose their action column at 390** (H3): `table-fixed` gives the last column 0 px. Owner's UI.
+5. [ ] **`void_payment` breaks C01**: cancelling an installment writes no write-off, so `planned − write_off` stops matching `sold` and the balance keeps charging a forgiven cuota. Needs the owner's rule (D5 says the default is to forgive) before the function creates the adjustment.
+6. [ ] **Date guards missing** in `create_sale`, `record_receipt`, `register_return` and `settle_return`: 2099 is accepted and lands in a future month. `settle_return` also takes no `p_by`.
+7. [ ] **`set_item_price` retroactive** desyncs the catalog column from the open interval (the state C20 exists to catch); **`cost_on(date)`** resolves the day in UTC, so 56 of 59 intervals give the previous cost or null.
+8. [ ] **`C16` has no control**, and the `C11` control's RLS branch can never fire because the `ensure_rls` event trigger turns RLS on at CREATE TABLE.
+
 ### Appointments leave the system (decided 2026-11-21)
 
 0. [x] **Sessions and zero value** (migrations `20261121240000`, `20261121250000`): `treatments.sessions_minimum` = 4 on `PCK-0016` and `PCK-0015`; `session_progress` and `session_gaps` group a program's history by name across its package and unit rows; `sale_items` refuses a price or a total of zero. Today: Tirzepatide 20 complete / 50 below the minimum, Semaglutide 8 below. The 58 incomplete cases wait for the clinic's rule.

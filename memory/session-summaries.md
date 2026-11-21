@@ -2,7 +2,17 @@
 
 Dated session wrap-ups, newest first. Format: what was attempted, what got done, what stayed open.
 
+## 2026-11-21 — Pre-release review with five parallel agents
+
+**Done:**
+- Architecture, data layer, end-to-end flows, build and UI were audited independently. Fixed on the spot: sale lines and sales can no longer be edited or deleted (`20261121270000`), a voided sale no longer counts as revenue in `sales_with_totals`, `discount_by_month` or `revenue_by_category`, `payment_receipts.external_id` is unique, a void reason needs four characters, C19 compares numbers instead of searching view text (its control now simulates the regression), and `reconcile_catalog.py` stops reading the dropped `duration_months`.
+- Verified green: `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm build`, 20 checks, baseline 435.
+- Flows verified in the browser (276 screenshots): every sidebar route at 1440 and 390, patients, the sale screen with its draft, sales details totals, Returns/Voids/Open items/Expenses/Catalog. The totals match the base to the cent.
+
+**Open:** prioritised in `next-actions.md` under *Pre-release review*: the missing publishable key (auth runs on the secret key), the mobile drawer that never closes, the expenses month at 680 px on a phone, Returns/Voids losing their action column, `void_payment` breaking C01, the missing date guards, and the `cost_on` timezone shift.
+
 ## 2026-11-21 — The desk screens: U2 to U7 closed
+
 
 **Goal:** close every open finding of the 2026-11-20 UX audit that belongs to this side, before anything else.
 

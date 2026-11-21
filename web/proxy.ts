@@ -45,6 +45,12 @@ export async function proxy(request: NextRequest) {
   }
 
   const supabase = createServerClient(url, key, {
+    cookieOptions: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    },
     cookies: {
       getAll() {
         return request.cookies.getAll()

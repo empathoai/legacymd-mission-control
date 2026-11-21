@@ -26,6 +26,15 @@ export async function createAuthClient() {
   const cookieStore = await cookies()
 
   return createServerClient(url, key, {
+    // The session cookie is read by the server only: no browser client exists
+    // in this app. `httpOnly` keeps it out of reach of any script, and `secure`
+    // keeps it off plain HTTP in production.
+    cookieOptions: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    },
     cookies: {
       getAll() {
         return cookieStore.getAll()

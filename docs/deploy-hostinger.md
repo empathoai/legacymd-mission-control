@@ -13,7 +13,7 @@ Verified locally from a fresh clone, exactly as the host runs it: `npm ci` → 0
 | Application root | **`web`** — the Next app lives there, not at the repository root |
 | Package manager | **npm** (`package-lock.json` is committed for it) |
 | Install command | `npm ci` (falls back to `npm install` if the panel has no `ci`) |
-| Build command | `npm run build` |
+| Build command | `npm run build -- --webpack` — the host's Turbopack crashed on `app/globals.css`; webpack was verified from a fresh clone (build 0, `/` 307, `/login` 200) |
 | Start command | `npm start` — `next start`, which reads the `PORT` the host sets |
 | Node.js | **22** (`engines.node >= 22`, `.nvmrc`) — 20 is too old for `@supabase/supabase-js` |
 

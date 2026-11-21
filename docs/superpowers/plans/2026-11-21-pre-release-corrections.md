@@ -191,6 +191,8 @@ select 'return', id::text, refunded_on::text from public.sale_refunds where refu
 
 ### Task 5: `cost_on(date)` answers the day the clinic means
 
+**Status: done 2026-11-21.** `cost_on` resolves the date at midnight `America/New_York`. C23 compares every interval that starts at the clinic's midnight (134 of 137; three start mid-morning from a migration that used `now()` and correctly answer the earlier cost); its control reinstates the old definition and fires on 53 rows. Gross margin stays **74.873,66** — no money view moved.
+
 **Files:**
 - Create: `supabase/migrations/20261122130000_cost_on_clinic_midnight.sql`
 - Create: `supabase/checks/c23_cost_on_matches_interval.sql` (+ control)

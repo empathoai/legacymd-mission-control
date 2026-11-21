@@ -1,23 +1,24 @@
 # Deploy on Hostinger from GitHub
 
-The panel pulls the repository and runs the commands below. No console needed. Two settings
-decide whether it works: **the app root is `web/`**, and **Node must be 22**.
+Verified locally from a fresh clone, exactly as the host runs it: `npm ci` → 0, `npm run build`
+→ 0, `npm start` → `/` answers **307 → /login**, `/login` **200**, `/expenses` **307**.
 
 ## Panel settings
 
 | Setting | Value |
 |---|---|
 | Repository | `github.com/empathoai/legacymd-mission-control` |
-| Branch | `master` |
+| Branch | **`master`** (the default branch here; the panel may suggest `main`) |
+| Framework | Next.js |
 | Application root | **`web`** — the Next app lives there, not at the repository root |
-| Node version | **22** (the project declares `engines.node >= 22` and `.nvmrc` = 22) |
-| Install command | `pnpm install` if the panel offers pnpm; otherwise `npm install` |
-| Build command | `pnpm build` / `npm run build` |
-| Start command | `pnpm start` / `npm start` (`next start`; it reads the `PORT` the host sets) |
+| Package manager | **npm** (`package-lock.json` is committed for it) |
+| Install command | `npm ci` (falls back to `npm install` if the panel has no `ci`) |
+| Build command | `npm run build` |
+| Start command | `npm start` — `next start`, which reads the `PORT` the host sets |
+| Node.js | **22** (`engines.node >= 22`, `.nvmrc`) — 20 is too old for `@supabase/supabase-js` |
 
-The build no longer depends on devDependencies for CSS: `web/app/shadcn-tailwind.css` is a
-vendored copy, so a production-only install still compiles. `shadcn` stays a devDependency
-for the CLI that adds components.
+Two lockfiles exist on purpose: `web/pnpm-lock.yaml` for local development, `web/package-lock.json`
+for the host. Both were resolved from the same `package.json`.
 
 ## Environment variables (panel, never in git)
 
@@ -25,10 +26,21 @@ for the CLI that adds components.
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | the project URL; the app throws without it |
 | `SUPABASE_PUBLISHABLE_KEY` | the auth client and the middleware; without it they fall back to the secret |
-| `SUPABASE_SECRET_KEY` | the server reads and writes; it must never reach the browser |
+| `SUPABASE_SECRET_KEY` | the server's reads and writes; it must never reach the browser |
 
-Not needed on the host: `SUPABASE_ACCESS_TOKEN` (the Python scripts only), `GHL_WEBHOOK_SECRET`
-(there is no `/api` route any more), `EMAIL`/`PASSWORD`.
+`web/.env.example` lists them with no values. Not needed on the host: `SUPABASE_ACCESS_TOKEN`
+(the Python scripts only), `GHL_WEBHOOK_SECRET` (no `/api` route exists), `EMAIL`/`PASSWORD`.
+
+## What this app is, in deploy terms
+
+A full Next.js server app: server components, Server Actions (`app/(app)/*/actions.ts`),
+middleware (`web/proxy.ts` gates every route in production) and server-side auth. There is no
+`output: "export"`, no `vercel.json`, no Edge runtime, no `@vercel/*`, no cron and no image
+domains — everything the host needs is `next build` and `next start`.
+
+The build **needs devDependencies** (Tailwind and its PostCSS plugin). `npm ci` installs them by
+default; a production-only install would fail the build. The shadcn CSS is vendored in
+`web/app/shadcn-tailwind.css`, so that package is not needed at build time.
 
 ## After the first deploy
 
@@ -36,18 +48,24 @@ Not needed on the host: `SUPABASE_ACCESS_TOKEN` (the Python scripts only), `GHL_
 2. Sign in with the clinic account; a write records that email as its actor.
 3. The dashboard reads today; `/sales/new` writes through `create_sale`.
 
-The login gate is **on** in production (`web/proxy.ts` checks `auth.getClaims()`). Development
-is the environment that runs without a password.
+The login gate is **on** in production. Development is the environment that runs without a
+password.
 
-## What to check when a deploy fails
+## When a deploy fails, check in this order
 
-- **App root**: if Hostinger reports "no package.json", the root is still the repository root.
-- **Node 20**: `@supabase/supabase-js` and `cn` require Node ≥ 22.
-- **`npm ci`**: there is no `package-lock.json` (the project uses pnpm); the panel must run
-  `npm install`, not `npm ci`.
-- **Missing env**: the build succeeds without them, the first request throws — set them before
-  opening the site.
+1. **App root**: "no package.json" means the root is still the repository root.
+2. **Node version**: 20 → `@supabase/supabase-js` refuses to load.
+3. **`npm ci` without the lock**: the lock is committed; if the panel still fails, `npm install`.
+4. **Missing env**: the build succeeds without them and the first request throws — set them
+   before opening the site.
+5. **Build logs**: the first failing line names the missing variable or command.
 
 ## Rollback
 
 Redeploy the previous commit from the panel. Nothing in the repository depends on the host.
+
+## Before publishing, still open
+
+- The `sbp_` account token in the root `.env.local` is still valid; revoke it once the schema
+  work pauses.
+- The clinic account's password reset happens in the Supabase dashboard.

@@ -89,8 +89,7 @@ goes: the desk picks the price at the sale.
 The sheet's Category disagrees with the kind stored in the base in 26 rows. This is the next
 decision, and it is not a cost question.
 
-**a. Nine packages stored as unit treatments** — the sale screen does not lock quantity to 1
-and no duration is recorded: `TRT-0024` 2 IV + 4 Lipotropic, `TRT-0025` 4 IVs + 6 Lipotropic
+**a. Nine packages stored as unit treatments** — the sale screen does not lock quantity to 1: `TRT-0024` 2 IV + 4 Lipotropic, `TRT-0025` 4 IVs + 6 Lipotropic
 Package + Arum, `TRT-0026` Enclomiphen Package, `TRT-0027` Energy Precision Endo/Flow,
 `TRT-0029` IV Series, `TRT-0030` LegacyMen 360, `TRT-0031` NAD+ IV Series Protocol,
 `TRT-0034` Peptide/IVs Packages, `TRT-0037` Weight Loss Package w/ Semaglutide.

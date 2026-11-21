@@ -7,7 +7,7 @@ One page, so nobody edits rows at midnight to fix a classification.
 | Kind | What it is | Table | Code | Examples |
 |---|---|---|---|---|
 | **Treatment** | A clinical act on the patient: an injection, a peel, an IV. Sold per session. | `treatments`, `unit_type = 'unit'` | `TRT-` | Botox Treatment, IV Single, Microneedling Treatment |
-| **Package** | Several sessions of one or more treatments, sold once, with a duration in months. | `treatments`, `unit_type = 'package'` | `PCK-` | Weight Loss Packages w/ Tirzepatide, 4 IVs + 6 Lipotropic Package + Arum |
+| **Package** | Several sessions of one or more treatments, sold once. How many sessions a patient takes depends on progress, so the catalog carries no session count; the plan does. | `treatments`, `unit_type = 'package'` | `PCK-` | Weight Loss Packages w/ Tirzepatide, 4 IVs + 6 Lipotropic Package + Arum |
 | **Membership** | A recurring plan with a fixed fee that gives access to a benefit for a period. | `treatments`, `unit_type = 'membership'` | `MEM-` | Botox Membership, Eterna IV Series Membership |
 | **Product** | A physical item handed to the patient. It has stock and a unit cost. | `products` | `PROD-` | NoxSynergy, Arum Fresh, Biotin, Exosomes |
 | **Service** | An act with no stock: a lab panel, a consultation. | `services` | `SRV-` | Consultation, Lab Work, Lab Work - Extended Panel |

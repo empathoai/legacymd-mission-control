@@ -4,9 +4,16 @@ Punch list. One line per action, imperative, with the owner when it is not me. A
 
 ## Blockers
 
-- **Access to the clinic's Google account.** The bot writes the bookings to the clinic's Google Calendar, so the calendar's *secret address in iCal format* is the intended feeder for `/appointments`. Nobody has that address until the owner grants access to the account. Nothing else about the integration can be built before it: the event sample (title, description, location) comes from that account too.
+- **None.** The Google Calendar access is no longer a blocker: appointments left the system on 2026-11-21.
 
 ## Next
+
+### Appointments leave the system (decided 2026-11-21)
+
+1. [ ] **Data side** — the migration in [`../docs/appointments-removal-2026-11-21.md`](../docs/appointments-removal-2026-11-21.md) section 1: drop the two tables, two views, seven functions, `sales.appointment_id`, checks C14/C15/C17; renumber `visit_number` from the sales alone; add `treatments.sessions`; add the `package_split_cases` view; add the zero-value triggers and the check that joins them.
+2. [ ] **Screens** (the owner): the agenda route, the show-up rate, the appointment picker in the sale screen, and `/api/ghl/appointments`.
+3. [ ] **`AGENTS.md`**: the line "a visit with no purchase is an appointment with `show_up`" is no longer true.
+4. [ ] **Waiting on the clinic**: sessions per item, the rule for extra and missing sessions, and what to do with the 51 historical appointments.
 
 ### UX, from the audit of 2026-11-20 (in the order it ranks them)
 

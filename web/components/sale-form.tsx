@@ -113,6 +113,28 @@ type Installment = {
 
 type Outcome = { kind: "idle" } | { kind: "saved"; saleId: string; total: number }
 
+/**
+ * The sale in progress lives in sessionStorage, so a trip to the dashboard and
+ * back does not cost the front desk a re-typed sale. Not a database draft: the
+ * tab owns it, and it dies with the tab.
+ */
+const DRAFT_KEY = "legacymd:sale-draft:v1"
+
+type SaleDraft = {
+  savedAt: number
+  customer: SaleCustomerMatch | null
+  lines: Line[]
+  paymentMode: "full" | "plan"
+  paidMethodId: string
+  paidToday: string
+  installments: Installment[]
+  notes: string
+  occurredOn: string
+  sourceId: string
+  newName: string
+  newPhone: string
+}
+
 export function SaleForm({
   items,
   sources,
@@ -143,11 +165,107 @@ export function SaleForm({
   const [notes, setNotes] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [outcome, setOutcome] = useState<Outcome>({ kind: "idle" })
+  const [restored, setRestored] = useState(false)
   const [pending, startTransition] = useTransition()
 
   const keyRef = useRef(0)
   const nextKey = () => String(++keyRef.current)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const draftReady = useRef(false)
+
+  // Restore once, before the save effect below can overwrite the draft with an
+  // empty form.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(DRAFT_KEY)
+      if (raw) {
+        const draft = JSON.parse(raw) as SaleDraft
+        const fresh = Date.now() - (draft.savedAt ?? 0) < 12 * 60 * 60 * 1000
+        if (fresh) {
+          setCustomer(draft.customer ?? null)
+          setLines(Array.isArray(draft.lines) ? draft.lines : [])
+          setPaymentMode(draft.paymentMode === "plan" ? "plan" : "full")
+          if (draft.paidMethodId) setPaidMethodId(draft.paidMethodId)
+          setPaidToday(draft.paidToday ?? "")
+          setInstallments(Array.isArray(draft.installments) ? draft.installments : [])
+          setNotes(draft.notes ?? "")
+          setOccurredOn(draft.occurredOn || clinicToday())
+          setSourceId(draft.sourceId ?? "")
+          setNewName(draft.newName ?? "")
+          setNewPhone(draft.newPhone ?? "")
+          const touched =
+            Boolean(draft.customer) ||
+            (draft.lines?.length ?? 0) > 0 ||
+            (draft.installments?.length ?? 0) > 0 ||
+            Boolean(draft.notes?.trim()) ||
+            Boolean(draft.newName?.trim()) ||
+            Boolean(draft.newPhone?.trim())
+          setRestored(touched)
+        } else {
+          sessionStorage.removeItem(DRAFT_KEY)
+        }
+      }
+    } catch {
+      // A blocked or corrupt draft must never stop the sale screen.
+    }
+    draftReady.current = true
+  }, [])
+
+  useEffect(() => {
+    if (!draftReady.current) return
+    const touched =
+      Boolean(customer) ||
+      lines.length > 0 ||
+      installments.length > 0 ||
+      Boolean(notes.trim()) ||
+      Boolean(newName.trim()) ||
+      Boolean(newPhone.trim())
+    try {
+      if (!touched) {
+        sessionStorage.removeItem(DRAFT_KEY)
+        return
+      }
+      const draft: SaleDraft = {
+        savedAt: Date.now(),
+        customer,
+        lines,
+        paymentMode,
+        paidMethodId,
+        paidToday,
+        installments,
+        notes,
+        occurredOn,
+        sourceId,
+        newName,
+        newPhone,
+      }
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft))
+    } catch {
+      // Storage full or blocked: the sale still works.
+    }
+  }, [
+    customer,
+    lines,
+    paymentMode,
+    paidMethodId,
+    paidToday,
+    installments,
+    notes,
+    occurredOn,
+    sourceId,
+    newName,
+    newPhone,
+  ])
+
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => {
+      if (lines.length === 0) return
+      event.preventDefault()
+      event.returnValue = ""
+    }
+    window.addEventListener("beforeunload", warn)
+    return () => window.removeEventListener("beforeunload", warn)
+  }, [lines.length])
 
   useEffect(() => {
     if (timer.current) clearTimeout(timer.current)
@@ -485,6 +603,10 @@ export function SaleForm({
       if (result.ok) {
         setOutcome({ kind: "saved", saleId: result.saleId, total: saleTotal })
         resetForm()
+        setRestored(false)
+        try {
+          sessionStorage.removeItem(DRAFT_KEY)
+        } catch {}
       } else {
         setError(result.error)
       }
@@ -499,6 +621,28 @@ export function SaleForm({
           Pick the patient, add what was sold, then how it is being paid.
         </p>
       </div>
+
+      {restored ? (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-dashed p-3 text-sm">
+          <span className="text-muted-foreground">
+            This sale was kept in this browser. Nothing was lost.
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              resetForm()
+              setRestored(false)
+              try {
+                sessionStorage.removeItem(DRAFT_KEY)
+              } catch {}
+            }}
+          >
+            Start over
+          </Button>
+        </div>
+      ) : null}
 
       {/* Patient */}
       <section className="flex flex-col gap-3 rounded-lg border p-4">
@@ -567,20 +711,28 @@ export function SaleForm({
 
             <div className="flex flex-col gap-2 rounded-md border border-dashed p-3">
               <span className="text-sm font-medium">Not in the list? Create the patient</span>
-              <div className="grid gap-2 sm:grid-cols-[1fr_10rem_auto]">
-                <Input
-                  value={newName}
-                  onChange={(event) => setNewName(event.target.value)}
-                  placeholder="Full name"
-                />
-                <Input
-                  value={newPhone}
-                  onChange={(event) =>
-                    setNewPhone(event.target.value.replace(/\D/g, "").slice(0, 11))
-                  }
-                  placeholder="Phone"
-                  inputMode="numeric"
-                />
+              <div className="grid items-end gap-2 sm:grid-cols-[1fr_10rem_auto]">
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor="sale-new-name">Full name</Label>
+                  <Input
+                    id="sale-new-name"
+                    value={newName}
+                    onChange={(event) => setNewName(event.target.value)}
+                    placeholder="Ana Perez"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor="sale-new-phone">Phone</Label>
+                  <Input
+                    id="sale-new-phone"
+                    value={newPhone}
+                    onChange={(event) =>
+                      setNewPhone(event.target.value.replace(/\D/g, "").slice(0, 11))
+                    }
+                    placeholder="0999999999"
+                    inputMode="numeric"
+                  />
+                </div>
                 <Button type="button" variant="outline" onClick={onCreateNew} disabled={pending}>
                   <Plus data-icon="inline-start" />
                   Create and use

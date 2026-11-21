@@ -8,7 +8,7 @@ export default function Page() {
       points={[
         "Channels (sources) and categories, open catalogs the clinic can extend.",
         "Payment methods and the clinic timezone.",
-        "Team access, once authentication is wired.",
+        "Team access and role permissions.",
       ]}
     />
   )

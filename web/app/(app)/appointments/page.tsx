@@ -107,9 +107,9 @@ export default async function Page({
   const idleClass = "text-muted-foreground hover:bg-muted hover:text-foreground"
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+    <div className="flex w-full flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-semibold tracking-tight">Appointments</h2>
+        <h1 className="text-2xl font-semibold tracking-tight">Appointments</h1>
         <p className="text-sm text-muted-foreground">
           Who is coming, what they expect, and what happened. The bot books; you mark the outcome.
         </p>
@@ -259,7 +259,7 @@ export default async function Page({
                 from={from}
                 to={to}
                 basePath="/appointments"
-                params={{ tab: "history" }}
+                params={q ? { tab: "history", q } : { tab: "history" }}
               />
               {!(rangeMode ? from === today && to === today : date === today) ? (
                 <Button
@@ -270,8 +270,8 @@ export default async function Page({
                     <Link
                       href={
                         rangeMode
-                          ? `/appointments?tab=history&from=${today}&to=${today}`
-                          : `/appointments?tab=history&date=${today}`
+                          ? `/appointments?tab=history&from=${today}&to=${today}${query}`
+                          : `/appointments?tab=history&date=${today}${query}`
                       }
                     />
                   }
@@ -364,27 +364,39 @@ export default async function Page({
 
           {history && history.pageCount > 1 ? (
             <div className="flex items-center justify-between gap-3">
-              <Button
-                variant="outline"
-                disabled={history.page <= 1}
-                nativeButton={false}
-                render={<Link href={pageHref(history.page - 1)} />}
-              >
-                <ChevronLeft data-icon="inline-start" />
-                Previous
-              </Button>
+              {history.page <= 1 ? (
+                <Button variant="outline" disabled>
+                  <ChevronLeft data-icon="inline-start" />
+                  Previous
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  nativeButton={false}
+                  render={<Link href={pageHref(history.page - 1)} />}
+                >
+                  <ChevronLeft data-icon="inline-start" />
+                  Previous
+                </Button>
+              )}
               <span className="text-sm text-muted-foreground">
                 Page {history.page} of {history.pageCount}
               </span>
-              <Button
-                variant="outline"
-                disabled={history.page >= history.pageCount}
-                nativeButton={false}
-                render={<Link href={pageHref(history.page + 1)} />}
-              >
-                Next
-                <ChevronRight data-icon="inline-end" />
-              </Button>
+              {history.page >= history.pageCount ? (
+                <Button variant="outline" disabled>
+                  Next
+                  <ChevronRight data-icon="inline-end" />
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  nativeButton={false}
+                  render={<Link href={pageHref(history.page + 1)} />}
+                >
+                  Next
+                  <ChevronRight data-icon="inline-end" />
+                </Button>
+              )}
             </div>
           ) : null}
         </>

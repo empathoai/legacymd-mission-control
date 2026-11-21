@@ -4,13 +4,15 @@
 
 Read this first when resuming. Then `AGENTS.md` and `memory/current-strategy.md`.
 
+**Next session:** reconcile the catalog against the owner's Excel row by row (cost and price, treatments and products). The three packages already match; the Excel is the master, and a per-unit model (Botox by the unit) was withdrawn because the catalog defines `Botox Treatment` as one flat item.
+
 ## Where things live
 
 | What | Where |
 |---|---|
 | Supabase project | `konjxlatjymqrzebvtdu` (`https://konjxlatjymqrzebvtdu.supabase.co`), Postgres 17, us-east-2 |
 | Credentials | `.env.local` (gitignored): publishable key, secret key, `SUPABASE_ACCESS_TOKEN`, test user |
-| Schema | `supabase/migrations/*.sql` (30 files, applied in filename order) |
+| Schema | `supabase/migrations/*.sql` (101 files, applied in filename order) |
 | Query helper | `scripts/query.py "SELECT ..."` or `scripts/query.py @file.sql` |
 | Apply migrations | `scripts/apply_migrations.py` (applies only what is not in `public.schema_migrations`, stops on the first error, then re-applies the lock-down file) |
 | Import generators | removed with the import: the base is loaded, the source exports live outside the repo (`F:\EmpathoAI-projects\_legacymd-datos-fuente`) |
@@ -23,20 +25,21 @@ Python with openpyxl: `C:\Users\aguaj\.dsh\dsh-runtimes\dsh-primary-runtime\depe
 
 | | |
 |---|---|
-| Customers | 215 |
+| Customers | 189 (23 duplicate groups merged on 2026-11-21; the spellings live in `aliases`) |
 | Sales | 435 (after the test records were removed) |
 | Sale items | 588 |
 | Receipts | 435, sum equals revenue |
 | Returns | 0 |
 | Revenue | **219.460,91** (consolidated import, 2026-11-20) |
+| Gross margin, May–November | **74.964,06** after the 20 product costs were set from the owner's sheet (was 71.663,96) |
 | Balance outstanding | **0,00** |
 | November 2026 | **18.599,92** sold and collected |
-| Expenses | 7 periods (May–Oct closed, Nov open), 98 live entries + 1 voided, total **247.350,49** (equals the sheet) |
+| Expenses | 7 periods (May–Oct closed, Nov open), 105 live entries + 1 voided, total **247.350,49** (equals the sheet); concepts carry `cost_behavior` and `guidance`, and the owner draw is its own concept |
 | Appointments | 51 |
 | `import_review` | 20 rows, all `rejected` (closed with the owner's answer), 0 pending |
-| Catalog | 93 active catalog items across treatments, packages, memberships, products and services |
-| Migrations | 92, all recorded in `public.schema_migrations` |
-| Checks | 19, with their negative controls; the baseline holds at 435 historical sales |
+| Catalog | 93 catalog rows across treatments, packages, memberships, products and services, **66 active** (the `catalog_items` view returns all 93, inactive included) |
+| Migrations | 101, all recorded in `public.schema_migrations` |
+| Checks | 20, with their negative controls; the baseline holds at 435 historical sales |
 | Remote | **none**: `git remote -v` is empty, so nothing is pushed |
 
 ## Handover — the dashboards and the sales report
@@ -57,7 +60,7 @@ What the other side can read:
 
 Rules that hold whatever the screen shows: months group by `occurred_on`, never by `created_at`; a sale is never edited (a return is a new row, a void marks the sale); a patient may have several sales in a day and they share the visit ordinal; cash never includes a voided sale.
 
-Numbers on 2026-11-20: 215 patients, 435 sales, 588 lines, 435 receipts, 0 returns, **219.460,91** sold and collected, **0,00** owed, November **18.599,92**.
+Numbers on 2026-11-21: 189 patients (23 duplicate groups merged; the spellings live in `aliases`), 435 sales, 588 lines, 435 receipts, 0 returns, **219.460,91** sold and collected, **0,00** owed, November **18.599,92**. The historical baseline was archived as `baseline-2026-11-20.json` and regenerated after the merge.
 
 Ask this side about the base; do not change the base to fit a chart.
 
@@ -90,7 +93,7 @@ Verified live: publishable key → `401 permission denied` on `customers` and
 5. New vs repeat comes from `is_first_visit`; source only on the first visit.
 6. Packages: `unit_type = 'package'`, quantity always 1, price and free-text `description`. Contents are not modelled.
 7. Margin is `revenue − cost`, no conditional logic anywhere.
-8. Costs: treatments/services have catalog costs (8 treatments estimated); **products cost $1.00 placeholder** until the owner gives the real average.
+8. Costs: treatments/services have catalog costs (8 treatments estimated); the 20 products on the owner's sheet carry its real average **from 2026-05-01, backdated**, so the whole history reads it. The four products the sheet omits (Arum Life, Arum Vital, FemGuard, Perform Supplement) still hold the $1.00 placeholder.
 9. A cost is a price interval (`item_cost_history`); a sale never stores one and its margin is derived from the interval covering the sale date. A change dated today cannot touch yesterday; correcting a past interval changes the margin without touching a sale.
 10. Access is server-only; the browser never uses the publishable key against `public`.
 
@@ -101,9 +104,9 @@ Verified live: publishable key → `401 permission denied` on `customers` and
 1. **Built and verified:** the base, the migrations with their 19 checks and controls, the catalog (five tabs, search, margin), patients, sales details, the sale entry screen, the appointments agenda, expenses, returns, voids, open items, and the login gate with the actor read from the session.
 2. **Owned elsewhere:** the dashboards and the sales report — the owner builds them with another LLM. This side keeps the data contract and answers questions; it does not draw the screen.
 3. **Next here:** the UX backlog U2–U7 from [`ux-audit-2026-11-20.md`](ux-audit-2026-11-20.md), in its order.
-4. **Then:** product costs, the branded PDF of the patient report, deploy to Vercel, and the Google Calendar feed once the account access exists.
+4. **Then:** the catalog's kind decisions from the reconciliation (section 4 of [`catalog-reconciliation-2026-11-21.md`](catalog-reconciliation-2026-11-21.md)), the branded PDF of the patient report, deploy to Vercel, and the Google Calendar feed once the account access exists.
 
-Owner data that is not a blocker: real product costs, package descriptions. The base is 435 sales, 588 lines, 435 receipts, 219.460,91 collected, 0,00 owed (consolidated import, 2026-11-20).
+Owner data that is not a blocker: the six costs the sheet omits, the eight provisional prices, package descriptions. The base is 435 sales, 588 lines, 435 receipts, 219.460,91 collected, 0,00 owed (consolidated import, 2026-11-20).
 
 ## Returns and money returned: the rule
 

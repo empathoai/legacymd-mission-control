@@ -17,7 +17,7 @@ export default async function Page({
       kind="product"
       icon={FlaskConical}
       title="Products"
-      description="Retail and injectables. The cost in force today comes from the price list, never from a stored column."
+      description="Retail skincare and injectables with active pricing and cost history."
       rows={rows}
       query={q}
     />

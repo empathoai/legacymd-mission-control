@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 
 import { supabase } from "@/lib/supabase/server"
 import { actor } from "@/lib/auth"
+import type { ExpenseCostBehavior } from "@/lib/expenses"
 
 
 export type ActionResult = { ok: true } | { ok: false; error: string }
@@ -130,13 +131,32 @@ export async function startExpenseMonth(period: string): Promise<ActionResult> {
 }
 
 export type CreateItemResult =
-  | { ok: true; item: { id: string; name: string; categoryLabel: string } }
+  | {
+      ok: true
+      item: {
+        id: string
+        name: string
+        categoryLabel: string
+        costBehavior: ExpenseCostBehavior
+        guidance: string | null
+      }
+    }
   | { ok: false; error: string }
+
+const COST_BEHAVIORS: ExpenseCostBehavior[] = [
+  "fixed",
+  "variable",
+  "acquisition",
+  "owner_draw",
+  "capex",
+]
 
 export async function createExpenseItem(input: {
   name: string
   categoryId: string
   categoryLabel: string
+  costBehavior: ExpenseCostBehavior
+  guidance: string | null
   period: string
 }): Promise<CreateItemResult> {
   const name = input.name.trim()
@@ -146,11 +166,19 @@ export async function createExpenseItem(input: {
   if (!input.categoryId) {
     return { ok: false, error: "Pick a category." }
   }
+  if (!COST_BEHAVIORS.includes(input.costBehavior)) {
+    return { ok: false, error: "Pick a cost type." }
+  }
 
   const { data, error } = await supabase
     .from("expense_items")
-    .insert({ name, category_id: input.categoryId })
-    .select("id, name")
+    .insert({
+      name,
+      category_id: input.categoryId,
+      cost_behavior: input.costBehavior,
+      guidance: input.guidance?.trim() || null,
+    })
+    .select("id, name, cost_behavior, guidance")
     .single()
 
   if (error) {
@@ -167,6 +195,8 @@ export async function createExpenseItem(input: {
       id: data.id as string,
       name: data.name as string,
       categoryLabel: input.categoryLabel,
+      costBehavior: (data.cost_behavior as ExpenseCostBehavior | null) ?? input.costBehavior,
+      guidance: (data.guidance as string | null) ?? null,
     },
   }
 }

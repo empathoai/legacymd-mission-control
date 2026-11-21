@@ -15,11 +15,14 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
 import { clinicToday, formatClinicDay } from "@/lib/dates"
+import { SaleStatusBadge } from "@/components/sale-status-badge"
+import { TableScrollHint } from "@/components/table-scroll-hint"
 import { listSaleLines, SALE_LINES_PER_PAGE } from "@/lib/sales"
 
 export const dynamic = "force-dynamic"
@@ -75,7 +78,7 @@ export default async function Page({
       ? `${formatClinicDay(from)} – ${formatClinicDay(to)}`
       : formatClinicDay(rangeMode ? from : date)
   const isToday = rangeMode ? from === today && to === today : date === today
-  const columns = rangeMode ? 8 : 7
+  const columns = rangeMode ? 9 : 8
 
   const pageHref = (target: number) =>
     rangeMode
@@ -85,7 +88,7 @@ export default async function Page({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-semibold tracking-tight">Sales details</h2>
+        <h1 className="text-2xl font-semibold tracking-tight">Sales details</h1>
         <p className="text-sm text-muted-foreground">
           Every sold line: the patient, the item and what was charged.
         </p>
@@ -128,6 +131,8 @@ export default async function Page({
         </div>
       </div>
 
+      <TableScrollHint />
+
       <div className="overflow-hidden rounded-lg border">
         <Table>
           <TableHeader>
@@ -140,6 +145,9 @@ export default async function Page({
               <TableHead className="text-right">Unit price</TableHead>
               <TableHead className="text-right">Total</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead className="w-8">
+                <span className="sr-only">Open the sale</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -175,7 +183,14 @@ export default async function Page({
                       {row.customerName}
                     </Link>
                   </TableCell>
-                  <TableCell className="max-w-xs truncate">{row.itemName}</TableCell>
+                  <TableCell className="max-w-xs truncate">
+                    <Link
+                      href={`/sales/${row.saleId}`}
+                      className="underline-offset-4 hover:underline"
+                    >
+                      {row.itemName}
+                    </Link>
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{label(row)}</TableCell>
                   <TableCell className="text-right tabular-nums">{row.quantity}</TableCell>
                   <TableCell className="text-right tabular-nums">
@@ -185,42 +200,80 @@ export default async function Page({
                     {money.format(row.lineTotal)}
                   </TableCell>
                   <TableCell>
-                    {row.voided ? (
-                      <Badge variant="destructive">Voided</Badge>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
+                    <SaleStatusBadge
+                      status={
+                        data.statusBySale[row.saleId] ??
+                        (row.voided ? "voided" : "paid")
+                      }
+                    />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Link
+                      href={`/sales/${row.saleId}`}
+                      aria-label={`Open the sale of ${row.customerName}`}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <ChevronRight className="size-4" />
+                    </Link>
                   </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
+          {data.rows.length > 0 ? (
+            <TableFooter>
+              <TableRow className="hover:bg-transparent">
+                <TableCell
+                  colSpan={rangeMode ? 6 : 5}
+                  className="text-muted-foreground"
+                >
+                  Total of the period · voided lines excluded
+                </TableCell>
+                <TableCell className="text-right font-medium tabular-nums">
+                  {money.format(data.totalAmount)}
+                </TableCell>
+                <TableCell colSpan={2} />
+              </TableRow>
+            </TableFooter>
+          ) : null}
         </Table>
       </div>
 
       {data.pageCount > 1 ? (
         <div className="flex items-center justify-between gap-3">
-          <Button
-            variant="outline"
-            disabled={data.page <= 1}
-            nativeButton={false}
-            render={<Link href={pageHref(data.page - 1)} />}
-          >
-            <ChevronLeft data-icon="inline-start" />
-            Previous
-          </Button>
+          {data.page <= 1 ? (
+            <Button variant="outline" disabled>
+              <ChevronLeft data-icon="inline-start" />
+              Previous
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href={pageHref(data.page - 1)} />}
+            >
+              <ChevronLeft data-icon="inline-start" />
+              Previous
+            </Button>
+          )}
           <span className="text-sm text-muted-foreground">
             Page {data.page} of {data.pageCount}
           </span>
-          <Button
-            variant="outline"
-            disabled={data.page >= data.pageCount}
-            nativeButton={false}
-            render={<Link href={pageHref(data.page + 1)} />}
-          >
-            Next
-            <ChevronRight data-icon="inline-end" />
-          </Button>
+          {data.page >= data.pageCount ? (
+            <Button variant="outline" disabled>
+              Next
+              <ChevronRight data-icon="inline-end" />
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href={pageHref(data.page + 1)} />}
+            >
+              Next
+              <ChevronRight data-icon="inline-end" />
+            </Button>
+          )}
         </div>
       ) : null}
     </div>

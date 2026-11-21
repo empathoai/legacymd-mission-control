@@ -36,6 +36,13 @@
       "skillPath": "skills/finishing-a-development-branch/SKILL.md",
       "computedHash": "7e24d821d45b8f10773edd9f1a4be2fac90eedae4f8fc8e70e34e27e44d3f3c0"
     },
+    "i-have-adhd": {
+      "source": "ayghri/i-have-adhd",
+      "commit": "1ecea1993b7fce257ffbd686c070948b5e07eda6",
+      "sourceType": "github",
+      "skillPath": "skills/i-have-adhd/SKILL.md",
+      "computedHash": "88955c019bbb1419ff4b49dbb1f80a867467de6233d7865af2e06a7d7b76c7d3"
+    },
     "llm-council": {
       "source": "aiwithremy/claude-skills-llm-council",
       "commit": "55ee36e89e0f3f780099ac50332fbb3ec8d14738",

@@ -2,11 +2,13 @@
 
 The *now* state, not history. If this file is older than 7 days, treat it as stale and ask before acting on it.
 
-_Last review: 2026-11-20_
+_Last review: 2026-11-21_
 
 ## Now
 
-The base is the owner's consolidated workbook: 215 customers, 435 sales, 588 lines, 219.460,91 collected, 51 appointments for visits without a purchase. Every sale carries its visit ordinal. The catalog has 66 active items with price and cost from the owner's master. November reads **18.599,92** sold and collected after the test records were removed, and the six closed months still match the sheet to the cent.
+The base is the owner's consolidated workbook: **189 customers** (23 duplicate groups merged on 2026-11-21; the variant spellings live in `aliases`), 435 sales, 588 lines, 219.460,91 collected, 51 appointments for visits without a purchase. Every sale carries its visit ordinal. The catalog has 66 active items with price and cost from the owner's master, and on 2026-11-21 the **20 product costs** came from that sheet too, backdated to 2026-05-01 so product margin is real from the first sale: the estimate the cutover had written and the $1.00 placeholder are gone, May–October margin rose 3.725,10, November fell 425,00, and gross margin reads **74.964,06** instead of 71.663,96. Only the four products the sheet omits (Arum Life, Arum Vital, FemGuard, Perform Supplement) still read $1.00. A package stores its **total** price and cost with `duration_months = 4` (the 495 is the payment installment, not the item price), a unit treatment keeps its own price and cost and is never a package slice, and **C20** keeps the catalog price equal to the interval a sale freezes. November reads **18.599,92** sold and collected after the test records were removed, and the six closed months still match the sheet to the cent.
+
+**The desk screens carry the UX audit's U2–U7 as of 2026-11-21.** Sales details has a footer total, a real Status read from `sale_money` and a row that opens `/sales/<id>` — a sale page with its lines, plan, receipts and returns. The catalog no longer collapses its Name column at 390 and prints cost and margin under the name; the empty states sit outside the table and every table that still scrolls says so. A sale in progress is kept in the browser, so leaving the screen no longer costs the sale; `beforeunload` warns once a line exists, and the inline patient fields have visible labels. A shared loading skeleton, an error boundary and two not-found screens cover every route, and the booking dialog prints its validation under the field it belongs to.
 
 **The dashboards and the sales report are being designed and built by the owner with another LLM.** That is deliberate: it is the surface where the owner's taste decides, and the data layer behind it is finished (views `monthly_pl`, `cash_collected`, `monthly_money`, `sale_money`, `product_cost_variants`, `refunded_by_item`). This session does not build them; it keeps the base, the checks and the entry screens honest, and it answers the questions the other model needs.
 
@@ -15,6 +17,8 @@ The dashboard that ships from here shows real numbers — sold this month, colle
 The UI now covers the full loop: catalog (five tabs — Treatments, Packages, Memberships, Products, Services — with search by name/code, a Margin reference column and a fixed-width grid; create, edit price and cost with validity), patients (new patient with search and validation, a searchable patient report that defaults to All and filters by Day/Range, patient detail), sales details (every sold line, read-only, Day/Range filter), the sale entry screen (patient search or create, catalog lines with frozen list prices — the picker shows kind and price, ranks priced items first and takes arrows and Enter — a payment plan with receipts, a sticky bar with the total and **Record sale**), the appointments agenda (every `booked` slot with `Today`/`Late`, History with the outcome and the reason, New booking, and one row of actions to mark who came, cancel with a reason or move the slot), **expenses** (each month with its total, the result after expenses and the category split; a line is added or corrected, voided with a reason, and the month is closed or reopened with a recorded reason), **returns** (the sales that can still give money back, the return recorded against the sale and settled when the money leaves) and **voids** (the sales with no money, voided once with a reason) as two separate sections, and **open items** (the installments still expected, by due month, with a payment recorded as a receipt and a charge cancelled with a reason).
 
 A patient may buy more than once in a day: the business day is the visit, a second sale shares the ordinal and is not a first visit, and `visits` counts days. A correction is still append — void plus new, never a rewrite; a sale with money is corrected with a return, not a void.
+
+**An expense concept says what kind of cost it is.** `expense_items.cost_behavior` is `fixed`, `variable`, `acquisition`, `owner_draw` or `capex`, with a short guidance line the entry dialog shows as soon as the concept is picked, so the person typing knows what belongs there. The assistant's wage is `Staff payroll` (2,880.00 a month) and the owner's draw is `Owner draw` (12,000.00), two concepts in the same payroll category; May–Nov 2026 were split with a 0.00 delta, so the closed months kept their totals. Reports classify by `cost_behavior`, never by name: fixed overhead excludes the draw, and the dashboard reads the operator's cost, not the owner's profit.
 
 A UX audit with a context-free agent and the `ui-ux-pro-max` rule set ran over all 17 routes at 1440 and 390; its report is [`../docs/ux-audit-2026-11-20.md`](../docs/ux-audit-2026-11-20.md). It ranks the dashboard lie, the off-screen sale button and the ambiguous item picker first — all three are fixed — and leaves U1–U7 in [`next-actions.md`](next-actions.md).
 
@@ -30,11 +34,12 @@ A build is behind `/login`: one clinic account, email and password, a cookie ses
 
 ## Next 30 days
 
-1. Product costs for the 24 products without one; owner confirmation of the 8 items priced from sales.
-2. The UX backlog U1–U7, in the audit's order: one report or none, the expenses row that adds up, Sales details with a total and a status, the narrow-screen tables, visible actions on the empty worklists, losing nothing on navigation, and loading/errors.
-3. Branded PDF of the patient report.
-4. Deploy to Vercel once the sale screen is proven in the clinic: it also gives the GHL webhook its public URL.
-5. Access to the clinic's Google account, for the calendar's secret iCal address and one sample event; then the Google sync replaces the dormant GHL webhook as the bot's feeder.
+1. **The catalog's shape against the owner's sheet**, now that price and cost agree: decide the 26 kind disagreements (nine packages stored as units, one membership, ten products the sheet calls Treatment, three services, three treatments the sheet calls Product) and one shape for the Timmix and Semaglutide pairs. Detail and evidence in [`../docs/catalog-reconciliation-2026-11-21.md`](../docs/catalog-reconciliation-2026-11-21.md).
+2. Six costs and eight provisional prices still waiting on the owner: Arum Life, Arum Vital, FemGuard, Perform Supplement, PRP Microneedling, Regenerative Glow have no cost, and none of the 8 items added from sales appears on the sheet.
+3. The UX backlog U1–U7, in the audit's order: one report or none, the expenses row that adds up, Sales details with a total and a status, the narrow-screen tables, visible actions on the empty worklists, losing nothing on navigation, and loading/errors.
+4. Branded PDF of the patient report.
+5. Deploy to Vercel once the sale screen is proven in the clinic: it also gives the GHL webhook its public URL.
+6. Access to the clinic's Google account, for the calendar's secret iCal address and one sample event; then the Google sync replaces the dormant GHL webhook as the bot's feeder.
 
 ## Not doing (this session)
 

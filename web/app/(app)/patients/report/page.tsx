@@ -2,6 +2,7 @@ import Link from "next/link"
 import { ChevronLeft, ChevronRight, Search, Users } from "lucide-react"
 
 import { DateFilter } from "@/components/date-filter"
+import { PatientReportTabs } from "@/components/patients/patient-report-tabs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,9 +21,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { listCustomersPaged } from "@/lib/customers"
+import { listCustomersInPeriod, listCustomersPaged } from "@/lib/customers"
 import { clinicToday, formatClinicDay } from "@/lib/dates"
-import { listCustomersInPeriod } from "@/lib/customers"
+import { getPatientIntelligence } from "@/lib/patient-intelligence"
 
 export const dynamic = "force-dynamic"
 
@@ -60,9 +61,9 @@ function formatDay(value: string | null) {
 
 function status(row: { isOverdue: boolean; balance: number; visits: number }) {
   if (row.isOverdue) return <Badge variant="destructive">Overdue</Badge>
-  if (row.balance > 0) return <Badge>Open</Badge>
+  if (row.balance > 0) return <Badge variant="gold">Open</Badge>
   if (row.visits === 0) return <Badge variant="secondary">No visits</Badge>
-  return <Badge variant="secondary">Settled</Badge>
+  return <Badge variant="positive">Settled</Badge>
 }
 
 function validDay(value: unknown): value is string {
@@ -99,35 +100,38 @@ export default async function Page({
   const from = validDay(params.from) ? params.from : date
   const to = validDay(params.to) ? params.to : from
 
-  const paged: ReportPage =
-    mode === "all"
-      ? await listCustomersPaged({ query: q, page, pageSize: PAGE_SIZE }).then(
-          (result) => ({
-            rows: result.rows.map((row) => ({
-              id: row.id,
-              fullName: row.fullName,
-              phone: row.phone,
-              spent: row.spentTotal,
-              returns: row.refundedTotal,
-              balance: row.balance,
-              visits: row.visits,
-              lastVisitOn: row.lastVisitOn,
-              nextDueOn: row.nextDueOn,
-              isOverdue: row.isOverdue,
-              isSettled: row.isSettled,
-            })),
-            total: result.total,
-            page: result.page,
-            pageCount: result.pageCount,
-          })
-        )
-      : await listCustomersInPeriod({
-          from: mode === "range" ? from : date,
-          to: mode === "range" ? to : date,
-          query: q,
-          page,
-          pageSize: PAGE_SIZE,
-        })
+  const [paged, intel]: [ReportPage, Awaited<ReturnType<typeof getPatientIntelligence>>] =
+    await Promise.all([
+      mode === "all"
+        ? listCustomersPaged({ query: q, page, pageSize: PAGE_SIZE }).then(
+            (result) => ({
+              rows: result.rows.map((row) => ({
+                id: row.id,
+                fullName: row.fullName,
+                phone: row.phone,
+                spent: row.spentTotal,
+                returns: row.refundedTotal,
+                balance: row.balance,
+                visits: row.visits,
+                lastVisitOn: row.lastVisitOn,
+                nextDueOn: row.nextDueOn,
+                isOverdue: row.isOverdue,
+                isSettled: row.isSettled,
+              })),
+              total: result.total,
+              page: result.page,
+              pageCount: result.pageCount,
+            })
+          )
+        : listCustomersInPeriod({
+            from: mode === "range" ? from : date,
+            to: mode === "range" ? to : date,
+            query: q,
+            page,
+            pageSize: PAGE_SIZE,
+          }),
+      getPatientIntelligence(),
+    ])
 
   const rows = paged.rows
   const first = paged.total === 0 ? 0 : (paged.page - 1) * PAGE_SIZE + 1
@@ -168,178 +172,213 @@ export default async function Page({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-semibold tracking-tight">Patient report</h2>
+        <h1 className="text-2xl font-semibold tracking-tight">Patient report</h1>
         <p className="text-sm text-muted-foreground">
-          Search a patient to see when they last came, what they spent and what they
-          still owe.
+          Patient directory, VIP rewards tiers, upsell opportunities and maintenance recall.
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-1">
-          <DateFilter
-            mode={mode}
-            date={date}
-            from={from}
-            to={to}
-            basePath="/patients/report"
-            showAll
-          />
-          {mode !== "all" && !isToday ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              nativeButton={false}
-              render={<Link href={`/patients/report?${todayQuery}${searchSuffix}`} />}
-            >
-              Today
-            </Button>
-          ) : null}
-        </div>
-        <Badge variant="secondary">{periodLabel}</Badge>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <form
-          className="flex w-full max-w-md items-center gap-2"
-          action="/patients/report"
-        >
-          {mode === "range" ? (
-            <>
-              <input type="hidden" name="from" value={from} />
-              <input type="hidden" name="to" value={to} />
-            </>
-          ) : mode === "day" ? (
-            <input type="hidden" name="date" value={date} />
-          ) : null}
-          <Input
-            name="q"
-            defaultValue={q ?? ""}
-            placeholder="Search by name"
-            className="flex-1"
-          />
-          <Button type="submit" variant="outline">
-            <Search data-icon="inline-start" />
-            Search
-          </Button>
-          {q ? (
-            <Button
-              variant="ghost"
-              nativeButton={false}
-              render={
-                <Link
-                  href={`/patients/report${modeQuery ? `?${modeQuery}` : ""}`}
+      <PatientReportTabs
+        intel={intel}
+        directorySlot={
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-1">
+                <DateFilter
+                  mode={mode}
+                  date={date}
+                  from={from}
+                  to={to}
+                  basePath="/patients/report"
+                  params={q ? { q } : undefined}
+                  showAll
                 />
-              }
-            >
-              Clear
-            </Button>
-          ) : null}
-        </form>
-        <Badge variant="secondary">{paged.total} patients</Badge>
-      </div>
+                {mode !== "all" && !isToday ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    nativeButton={false}
+                    render={<Link href={`/patients/report?${todayQuery}${searchSuffix}`} />}
+                  >
+                    Today
+                  </Button>
+                ) : null}
+              </div>
+              <Badge variant="secondary">{periodLabel}</Badge>
+            </div>
 
-      <div className="overflow-hidden rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead className="text-right">Spent</TableHead>
-              <TableHead className="text-right">Returns</TableHead>
-              <TableHead className="text-right">Balance</TableHead>
-              <TableHead className="text-right">Visits</TableHead>
-              <TableHead>Last visit</TableHead>
-              <TableHead>Next due</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.length === 0 ? (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={9} className="p-0">
-                  <Empty className="rounded-none border-0">
-                    <EmptyHeader>
-                      <EmptyMedia variant="icon">
-                        <Users />
-                      </EmptyMedia>
-                      <EmptyTitle>
-                        {mode === "all"
-                          ? "No patient matches"
-                          : `No patients bought in ${periodLabel}`}
-                      </EmptyTitle>
-                      <EmptyDescription>
-                        {mode === "all"
-                          ? "Try another spelling, or clear the search."
-                          : "Pick another period, or clear the search."}
-                      </EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="font-medium">
-                    <Link
-                      href={`/patients/${row.id}`}
-                      className="underline-offset-4 hover:underline"
-                    >
-                      {row.fullName}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {row.phone ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-right font-medium tabular-nums">
-                    {money.format(row.spent)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">
-                    {money.format(row.returns)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {money.format(row.balance)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">{row.visits}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDay(row.lastVisitOn)}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {formatDay(row.nextDueOn)}
-                  </TableCell>
-                  <TableCell>{status(row)}</TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <form
+                className="flex w-full max-w-md items-center gap-2"
+                action="/patients/report"
+              >
+                {mode === "range" ? (
+                  <>
+                    <input type="hidden" name="from" value={from} />
+                    <input type="hidden" name="to" value={to} />
+                  </>
+                ) : mode === "day" ? (
+                  <input type="hidden" name="date" value={date} />
+                ) : null}
+                <Input
+                  name="q"
+                  defaultValue={q ?? ""}
+                  placeholder="Search by name"
+                  className="flex-1 bg-card"
+                />
+                <Button type="submit" variant="outline">
+                  <Search data-icon="inline-start" />
+                  Search
+                </Button>
+                {q ? (
+                  <Button
+                    variant="ghost"
+                    nativeButton={false}
+                    render={
+                      <Link
+                        href={`/patients/report${modeQuery ? `?${modeQuery}` : ""}`}
+                      />
+                    }
+                  >
+                    Clear
+                  </Button>
+                ) : null}
+              </form>
+              <Badge variant="secondary">{paged.total} patients</Badge>
+            </div>
 
-      {paged.pageCount > 1 ? (
-        <div className="flex items-center justify-between gap-3">
-          <Button
-            variant="outline"
-            disabled={paged.page <= 1}
-            nativeButton={false}
-            render={<Link href={pageHref(paged.page - 1)} />}
-          >
-            <ChevronLeft data-icon="inline-start" />
-            Previous
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            {first}–{last} of {paged.total} · page {paged.page} of {paged.pageCount}
-          </span>
-          <Button
-            variant="outline"
-            disabled={paged.page >= paged.pageCount}
-            nativeButton={false}
-            render={<Link href={pageHref(paged.page + 1)} />}
-          >
-            Next
-            <ChevronRight data-icon="inline-end" />
-          </Button>
-        </div>
-      ) : null}
+            <div className="overflow-hidden rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead className="text-right">Spent</TableHead>
+                    <TableHead className="text-right">Balance</TableHead>
+                    <TableHead className="text-right">Visits</TableHead>
+                    <TableHead>Last visit</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rows.length === 0 ? (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell colSpan={7} className="p-0">
+                        <Empty className="rounded-none border-0">
+                          <EmptyHeader>
+                            <EmptyMedia variant="icon">
+                              <Users />
+                            </EmptyMedia>
+                            <EmptyTitle>
+                              {mode === "all"
+                                ? "No patient matches"
+                                : `No patients bought in ${periodLabel}`}
+                            </EmptyTitle>
+                            <EmptyDescription>
+                              {mode === "all"
+                                ? "Try another spelling, or clear the search."
+                                : "Pick another period, or clear the search."}
+                            </EmptyDescription>
+                          </EmptyHeader>
+                        </Empty>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    rows.map((row) => {
+                      const tier = intel.tierById[row.id]
+                      return (
+                        <TableRow key={row.id}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              <Link
+                                href={`/patients/${row.id}`}
+                                className="underline-offset-4 hover:underline"
+                              >
+                                {row.fullName}
+                              </Link>
+                              {tier === "platinum" ? (
+                                <Badge variant="gold" className="text-[10px]">
+                                  Platinum
+                                </Badge>
+                              ) : tier === "gold" ? (
+                                <Badge variant="positive" className="text-[10px]">
+                                  Gold
+                                </Badge>
+                              ) : null}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {row.phone ?? "—"}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            <div className="font-medium">{money.format(row.spent)}</div>
+                            {row.returns > 0 ? (
+                              <div className="text-[11px] text-muted-foreground">
+                                −{money.format(row.returns)} ret.
+                              </div>
+                            ) : null}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            <div>{money.format(row.balance)}</div>
+                            {row.nextDueOn ? (
+                              <div className="text-[11px] text-muted-foreground">
+                                Due {formatDay(row.nextDueOn)}
+                              </div>
+                            ) : null}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">{row.visits}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {formatDay(row.lastVisitOn)}
+                          </TableCell>
+                          <TableCell>{status(row)}</TableCell>
+                        </TableRow>
+                      )
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            {paged.pageCount > 1 ? (
+              <div className="flex items-center justify-between gap-3">
+                {paged.page <= 1 ? (
+                  <Button variant="outline" disabled>
+                    <ChevronLeft data-icon="inline-start" />
+                    Previous
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    nativeButton={false}
+                    render={<Link href={pageHref(paged.page - 1)} />}
+                  >
+                    <ChevronLeft data-icon="inline-start" />
+                    Previous
+                  </Button>
+                )}
+                <span className="text-sm text-muted-foreground">
+                  {first}–{last} of {paged.total} · page {paged.page} of {paged.pageCount}
+                </span>
+                {paged.page >= paged.pageCount ? (
+                  <Button variant="outline" disabled>
+                    Next
+                    <ChevronRight data-icon="inline-end" />
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    nativeButton={false}
+                    render={<Link href={pageHref(paged.page + 1)} />}
+                  >
+                    Next
+                    <ChevronRight data-icon="inline-end" />
+                  </Button>
+                )}
+              </div>
+            ) : null}
+          </div>
+        }
+      />
     </div>
   )
 }

@@ -16,6 +16,13 @@ export type ExpenseMonth = {
   netRevenue: number
   expenses: number
   result: number
+  fixed: number
+  variable: number
+  acquisition: number
+  clinicOpEx: number
+  operatingProfit: number
+  ownerDraw: number
+  capex: number
 }
 
 export type ExpenseLine = {
@@ -23,6 +30,7 @@ export type ExpenseLine = {
   itemId: string
   itemName: string
   categoryLabel: string
+  costBehavior: ExpenseCostBehavior
   supplierId: string | null
   supplierName: string | null
   amount: number
@@ -45,9 +53,31 @@ export type ExpenseMonthDetail = ExpenseMonth & {
   audit: ExpenseAudit[]
 }
 
-export type ExpenseItemOption = { id: string; name: string; categoryLabel: string }
+export type ExpenseCostBehavior =
+  | "fixed"
+  | "variable"
+  | "acquisition"
+  | "owner_draw"
+  | "capex"
+
+export type ExpenseItemOption = {
+  id: string
+  name: string
+  categoryLabel: string
+  costBehavior: ExpenseCostBehavior
+  guidance: string | null
+}
 export type SupplierOption = { id: string; name: string }
 export type ExpenseCategoryOption = { id: string; label: string }
+
+export type ExpenseMatrixRow = {
+  itemId: string
+  itemName: string
+  categoryLabel: string
+  costBehavior: ExpenseCostBehavior
+  byPeriod: Record<string, number>
+  total: number
+}
 
 function r2(value: number): number {
   return Math.round(value * 100) / 100
@@ -61,7 +91,11 @@ type RawLine = {
   note: string | null
   voided_at: string | null
   void_reason: string | null
-  expense_items: { name: string; expense_categories: { label: string } | { label: string }[] | null } | null
+  expense_items: {
+    name: string
+    cost_behavior: ExpenseCostBehavior | null
+    expense_categories: { label: string } | { label: string }[] | null
+  } | null
   suppliers: { name: string } | { name: string }[] | null
 }
 
@@ -71,7 +105,7 @@ function one<T>(value: T | T[] | null | undefined): T | null {
 }
 
 const LINE_COLUMNS =
-  "id, item_id, supplier_id, amount, note, voided_at, void_reason, expense_items ( name, expense_categories ( label ) ), suppliers ( name )"
+  "id, item_id, supplier_id, amount, note, voided_at, void_reason, expense_items ( name, cost_behavior, expense_categories ( label ) ), suppliers ( name )"
 
 /**
  * One row per month: the stored total for a closed month, the live sum for an
@@ -83,7 +117,9 @@ export async function listExpenseMonths(): Promise<ExpenseMonth[]> {
       .from("expense_periods")
       .select("id, period, status, total, closed_at")
       .order("period", { ascending: false }),
-    supabase.from("expense_entries").select("period_id, amount, voided_at"),
+    supabase
+      .from("expense_entries")
+      .select("period_id, amount, voided_at, expense_items ( cost_behavior )"),
     supabase.from("monthly_pl").select("month, revenue, expenses"),
     supabase.from("monthly_money").select("month, returned, net_revenue"),
   ])
@@ -91,13 +127,43 @@ export async function listExpenseMonths(): Promise<ExpenseMonth[]> {
   if (periods.error) throw new Error(`expense months query failed: ${periods.error.message}`)
   if (entries.error) throw new Error(`expense entries query failed: ${entries.error.message}`)
 
-  const live = new Map<string, { sum: number; count: number }>()
+  type PeriodAgg = {
+    sum: number
+    count: number
+    fixed: number
+    variable: number
+    acquisition: number
+    ownerDraw: number
+    capex: number
+  }
+  const live = new Map<string, PeriodAgg>()
   for (const row of entries.data ?? []) {
     if (row.voided_at) continue
     const key = row.period_id as string
-    const current = live.get(key) ?? { sum: 0, count: 0 }
-    current.sum += Number(row.amount)
+    const current = live.get(key) ?? {
+      sum: 0,
+      count: 0,
+      fixed: 0,
+      variable: 0,
+      acquisition: 0,
+      ownerDraw: 0,
+      capex: 0,
+    }
+    const amt = Number(row.amount)
+    const item = one(
+      row.expense_items as
+        | { cost_behavior: ExpenseCostBehavior | null }
+        | { cost_behavior: ExpenseCostBehavior | null }[]
+        | null
+    )
+    const behavior = item?.cost_behavior ?? "fixed"
+    current.sum += amt
     current.count += 1
+    if (behavior === "variable") current.variable += amt
+    else if (behavior === "acquisition") current.acquisition += amt
+    else if (behavior === "owner_draw") current.ownerDraw += amt
+    else if (behavior === "capex") current.capex += amt
+    else current.fixed += amt
     live.set(key, current)
   }
 
@@ -110,12 +176,27 @@ export async function listExpenseMonths(): Promise<ExpenseMonth[]> {
 
   return (periods.data ?? []).map((row) => {
     const period = row.period as string
-    const aggregate = live.get(row.id as string) ?? { sum: 0, count: 0 }
+    const aggregate = live.get(row.id as string) ?? {
+      sum: 0,
+      count: 0,
+      fixed: 0,
+      variable: 0,
+      acquisition: 0,
+      ownerDraw: 0,
+      capex: 0,
+    }
     const sold = Number(revenue.get(period)?.revenue ?? 0)
     const returned = Number(net.get(period)?.returned ?? 0)
     const netRevenue = Number(net.get(period)?.net_revenue ?? 0)
     const expenses = Number(revenue.get(period)?.expenses ?? 0)
     const closed = row.status === "closed"
+    const fixed = r2(aggregate.fixed)
+    const variable = r2(aggregate.variable)
+    const acquisition = r2(aggregate.acquisition)
+    const ownerDraw = r2(aggregate.ownerDraw)
+    const capex = r2(aggregate.capex)
+    const clinicOpEx = r2(fixed + variable + acquisition)
+    const operatingProfit = r2(netRevenue - clinicOpEx)
 
     return {
       id: row.id as string,
@@ -129,6 +210,13 @@ export async function listExpenseMonths(): Promise<ExpenseMonth[]> {
       netRevenue: r2(netRevenue),
       expenses: r2(expenses),
       result: r2(netRevenue - expenses),
+      fixed,
+      variable,
+      acquisition,
+      clinicOpEx,
+      operatingProfit,
+      ownerDraw,
+      capex,
     }
   })
 }
@@ -160,6 +248,7 @@ export async function getExpenseMonth(period: string): Promise<ExpenseMonthDetai
       itemId: row.item_id,
       itemName: item?.name ?? "(unknown)",
       categoryLabel: one(item?.expense_categories ?? null)?.label ?? "—",
+      costBehavior: item?.cost_behavior ?? "fixed",
       supplierId: row.supplier_id,
       supplierName: one(row.suppliers)?.name ?? null,
       amount: Number(row.amount),
@@ -194,7 +283,7 @@ export async function getExpenseMonth(period: string): Promise<ExpenseMonthDetai
 export async function listExpenseItems(): Promise<ExpenseItemOption[]> {
   const { data, error } = await supabase
     .from("expense_items")
-    .select("id, name, active, expense_categories ( label )")
+    .select("id, name, active, cost_behavior, guidance, expense_categories ( label )")
     .eq("active", true)
     .order("name")
 
@@ -204,6 +293,8 @@ export async function listExpenseItems(): Promise<ExpenseItemOption[]> {
     id: row.id as string,
     name: row.name as string,
     categoryLabel: one(row.expense_categories as { label: string } | { label: string }[] | null)?.label ?? "—",
+    costBehavior: (row.cost_behavior as ExpenseCostBehavior | null) ?? "fixed",
+    guidance: (row.guidance as string | null) ?? null,
   }))
 }
 
@@ -228,4 +319,52 @@ export async function listExpenseCategories(): Promise<ExpenseCategoryOption[]> 
   if (error) throw new Error(`expense categories query failed: ${error.message}`)
 
   return (data ?? []).map((row) => ({ id: row.id as string, label: row.label as string }))
+}
+
+export async function listExpenseMatrix(periods: string[]): Promise<ExpenseMatrixRow[]> {
+  if (periods.length === 0) return []
+  const periodSet = new Set(periods)
+
+  const { data, error } = await supabase
+    .from("expense_entries")
+    .select(
+      "amount, voided_at, expense_periods!inner ( period ), expense_items ( id, name, cost_behavior, expense_categories ( label ) )"
+    )
+    .is("voided_at", null)
+
+  if (error) throw new Error(`expense matrix query failed: ${error.message}`)
+
+  type RawMatrix = {
+    amount: number
+    expense_periods: { period: string } | { period: string }[] | null
+    expense_items: {
+      id: string
+      name: string
+      cost_behavior: ExpenseCostBehavior | null
+      expense_categories: { label: string } | { label: string }[] | null
+    } | null
+  }
+
+  const byItem = new Map<string, ExpenseMatrixRow>()
+  for (const row of (data as unknown as RawMatrix[]) ?? []) {
+    const period = one(row.expense_periods)?.period
+    if (!period || !periodSet.has(period)) continue
+    const item = one(row.expense_items)
+    if (!item) continue
+
+    const entry = byItem.get(item.id) ?? {
+      itemId: item.id,
+      itemName: item.name,
+      categoryLabel: one(item.expense_categories)?.label ?? "—",
+      costBehavior: item.cost_behavior ?? "fixed",
+      byPeriod: {},
+      total: 0,
+    }
+    const amt = Number(row.amount)
+    entry.byPeriod[period] = r2((entry.byPeriod[period] ?? 0) + amt)
+    entry.total = r2(entry.total + amt)
+    byItem.set(item.id, entry)
+  }
+
+  return Array.from(byItem.values()).sort((a, b) => b.total - a.total)
 }

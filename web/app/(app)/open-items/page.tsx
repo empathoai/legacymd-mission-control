@@ -2,7 +2,9 @@ import Link from "next/link"
 import { Wallet } from "lucide-react"
 
 import { OpenItemActions } from "@/components/open-item-actions"
+import { TableScrollHint } from "@/components/table-scroll-hint"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Empty,
@@ -71,9 +73,9 @@ export default async function Page() {
     forecast.find((row) => row.month.slice(0, 7) === thisMonth)?.received ?? 0
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-semibold tracking-tight">Open Items</h2>
+        <h1 className="text-2xl font-semibold tracking-tight">Open items</h1>
         <p className="text-sm text-muted-foreground">
           What is still expected, what is late, and what already came in.
         </p>
@@ -83,9 +85,9 @@ export default async function Page() {
         <Card>
           <CardHeader>
             <CardDescription>Expected this month</CardDescription>
-            <CardTitle className="text-2xl">{money.format(expectedThisMonth)}</CardTitle>
+            <CardTitle className="text-2xl tabular-nums">{money.format(expectedThisMonth)}</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="mt-auto">
             <p className="text-xs text-muted-foreground">
               {installments.filter((row) => row.dueOn.slice(0, 7) === thisMonth).length} installment
               {installments.filter((row) => row.dueOn.slice(0, 7) === thisMonth).length === 1
@@ -97,66 +99,82 @@ export default async function Page() {
         <Card>
           <CardHeader>
             <CardDescription>Overdue</CardDescription>
-            <CardTitle className={`text-2xl ${overdueTotal > 0 ? "text-destructive" : ""}`}>
+            <CardTitle
+              className={`text-2xl tabular-nums ${overdueTotal > 0 ? "text-destructive" : ""}`}
+            >
               {money.format(overdueTotal)}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="mt-auto">
             <p className="text-xs text-muted-foreground">
-              {overdue.length} past due{overdue.length === 1 ? "" : "s"}
+              {overdue.length} past due
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
             <CardDescription>Received this month</CardDescription>
-            <CardTitle className="text-2xl">{money.format(receivedThisMonth)}</CardTitle>
+            <CardTitle className="text-2xl tabular-nums">
+              {money.format(receivedThisMonth)}
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="mt-auto">
             <p className="text-xs text-muted-foreground">From receipts, not from the plan</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="overflow-hidden rounded-lg border">
-        <Table className="table-fixed">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-44">Due</TableHead>
-              <TableHead className="w-48">Patient</TableHead>
-              <TableHead className="w-28">Sale</TableHead>
-              <TableHead className="w-24 text-right">Amount</TableHead>
-              <TableHead className="w-24 text-right">Paid</TableHead>
-              <TableHead className="w-28 text-right">Remaining</TableHead>
-              <TableHead className="text-right">·</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {installments.length === 0 ? (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={7} className="p-0">
-                  <Empty className="rounded-none border-0">
-                    <EmptyHeader>
-                      <EmptyMedia variant="icon">
-                        <Wallet />
-                      </EmptyMedia>
-                      <EmptyTitle>Nothing is expected</EmptyTitle>
-                      <EmptyDescription>
-                        Every sale is collected. When one is sold on a plan, its installments land
-                        here.
-                      </EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
-                </TableCell>
-              </TableRow>
-            ) : (
-              groupByMonth(installments).map((group, index) => (
-                <TableRows key={`${group.label}-${index}`} group={group} methods={methods} />
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {installments.length === 0 ? (
+        <div className="rounded-lg border">
+          <Empty className="rounded-none border-0">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Wallet />
+              </EmptyMedia>
+              <EmptyTitle>Nothing is expected</EmptyTitle>
+              <EmptyDescription>
+                Every sale is collected. An installment appears here when a sale is
+                sold on a plan.
+              </EmptyDescription>
+              <Button
+                variant="outline"
+                size="sm"
+                nativeButton={false}
+                render={<Link href="/sales/new" />}
+              >
+                Record a sale on a plan
+              </Button>
+            </EmptyHeader>
+          </Empty>
+        </div>
+      ) : (
+        <>
+          <TableScrollHint />
+
+          <div className="overflow-hidden rounded-lg border">
+            <Table className="table-fixed">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-44">Due</TableHead>
+                  <TableHead className="w-48">Patient</TableHead>
+                  <TableHead className="w-28">Sale</TableHead>
+                  <TableHead className="w-24 text-right">Amount</TableHead>
+                  <TableHead className="w-24 text-right">Paid</TableHead>
+                  <TableHead className="w-28 text-right">Remaining</TableHead>
+                  <TableHead className="text-right">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {groupByMonth(installments).map((group, index) => (
+                  <TableRows key={`${group.label}-${index}`} group={group} methods={methods} />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
+      )}
 
       <p className="text-xs text-muted-foreground">
         Recording a payment appends a receipt; cancelling an installment stops expecting it, with a

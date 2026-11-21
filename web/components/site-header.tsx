@@ -1,10 +1,13 @@
 "use client"
 
+import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { Plus } from "lucide-react"
 
+import { ThemeToggle } from "@/components/theme-toggle"
+import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { ThemeToggle } from "@/components/theme-toggle"
 
 const titles: Record<string, string> = {
   "/": "Dashboard",
@@ -13,14 +16,14 @@ const titles: Record<string, string> = {
   "/sales/details": "Sales details",
   "/sales/returns": "Returns",
   "/sales/voids": "Voids",
-  "/open-items": "Open Items",
+  "/open-items": "Open items",
   "/sales/report": "Sales report",
   "/appointments": "Appointments",
   "/patients/new": "New patient",
-  "/patients/report": "Patient report",
+  "/patients/report": "Patients",
   "/expenses": "Expenses",
   "/catalog": "Catalog",
-  "/reports": "Reports",
+  "/reports": "Executive reports",
   "/settings": "Settings",
 }
 
@@ -37,11 +40,25 @@ export function SiteHeader() {
           : "LegacyMD")
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
       <SidebarTrigger className="-ml-1" />
-      <Separator orientation="vertical" className="mr-1 data-vertical:h-4 data-vertical:self-auto" />
+      <Separator
+        orientation="vertical"
+        className="mr-1 data-vertical:h-4 data-vertical:self-auto"
+      />
       <span className="truncate text-sm font-medium">{title}</span>
       <div className="ml-auto flex items-center gap-2">
+        {pathname !== "/sales/new" ? (
+          <Button
+            size="sm"
+            variant="outline"
+            nativeButton={false}
+            render={<Link href="/sales/new" />}
+          >
+            <Plus data-icon="inline-start" />
+            New sale
+          </Button>
+        ) : null}
         <ThemeToggle />
       </div>
     </header>

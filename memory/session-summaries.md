@@ -2,6 +2,89 @@
 
 Dated session wrap-ups, newest first. Format: what was attempted, what got done, what stayed open.
 
+## 2026-11-21 — The desk screens: U2 to U7 closed
+
+**Goal:** close every open finding of the 2026-11-20 UX audit that belongs to this side, before anything else.
+
+**Done:**
+- **U2** closed by inspection: the expense month was rebuilt with KPI cards (`Retained cash = Net rev − Total logged`), and the finding's example turned out to be **test data** — the 3.750,00 return it cited was deleted on 2026-11-20. `sale_refunds` and `adjustments` are both 0.
+- **U3** Sales details: footer total of the filtered set, a real Status derived from `sale_money` (Paid / Partial / Unpaid / Refunded / Voided, `sale-status-badge.tsx`), and a new page `/sales/<id>` with the sale's lines, plan, receipts, returns and note. Verified in the browser: statuses render, the footer reads $1,220.00 for 2026-11-16, the chevron opens Lourdes Jimenez's sale.
+- **U4** Narrow screens: the catalog's Name column measured **0 px at 390**; Code, Cost and Margin now hide below `sm` and cost/margin print under the name (Name 100 px, no scroll). The in-table empty state moved outside the table in the catalog, Open Items, Returns and Voids, and `TableScrollHint` marks every table that still scrolls.
+- **U5** The three worklists carry their action in the empty state: "Find a patient's sales", "Record a sale", "Record a sale on a plan".
+- **U6** The sale in progress lives in `sessionStorage` with a restore notice and a Start over button, `beforeunload` warns once a line exists, and the inline patient fields have visible labels. Verified: typed name survives Dashboard → back.
+- **U7** `(app)/loading.tsx`, `(app)/error.tsx`, `(app)/not-found.tsx` and `app/not-found.tsx`; a mistyped month and a missing sale both answer "That page does not exist". The booking dialog now prints its message under the search field, sets `aria-invalid` and announces it with `role="alert"` (verified in the DOM).
+- `pnpm typecheck`, `pnpm build`, `scripts/check_copy.py` (neutral) and `run_checks.py` (20 checks, baseline 435) all green.
+
+**Open:** U1 is the owner's (dashboards and sales report). The audit's remaining MEDIUM/LOW findings were not re-triaged; several may be stale like U2, since the screens were rebuilt after the audit.
+
+**State at close:** 102 migrations, 20 checks, 189 customers, 435 sales, gross margin 74.964,06.
+
+## 2026-11-21 — Catalog reconciled: the owner's sheet is the cost
+
+**Goal:** put every catalog price and cost against the owner's sheet, row by row, and make the history read the real cost instead of a number the base invented.
+
+**Done:**
+- [`scripts/reconcile_catalog.py`](../scripts/reconcile_catalog.py), read-only: it takes the sheet, matches by normalized name, and prints only the differences. Run against `catalog - Sheet1.csv` (59 rows, 54 unique names, 5 repeated) it answered **0 price differences in 54 rows**, 19 cost differences, 26 rows where the sheet's kind disagrees with the base, and 10 items the sheet does not list.
+- The report is [`../docs/catalog-reconciliation-2026-11-21.md`](../docs/catalog-reconciliation-2026-11-21.md).
+- The first reading of the history was wrong and worth recording: the base did not carry $1.00 throughout. It held the sheet's numbers from 2026-01-01, an **estimate at 70–130% of the price** from the cutover on 2026-05-01 ("catalog cost, no real effective date"), and the $1.00 placeholder only from 2026-11-01. Every sale is from May onwards, so the history read the estimate.
+- Migration `20261121150000_product_costs_from_sheet.sql`: the real cost of **20 products** (the 19 the sheet lists plus the Lip Filler product row, which shares its name with the treatment), one interval from 2026-05-01 to infinity, the estimate and the placeholder deleted rather than kept. The migration asserts the cost on 2026-05-01, 2026-08-15 and 2026-11-21 and that each product keeps one open interval.
+- Effect, verified against `monthly_pl`: May–October margin **+3.725,10**, November **−425,00** (the base had been charging $1.00 that month), net **+3.300,10**; gross margin 71.663,96 → **74.964,06**. Revenue, cash and the closed expense months did not move.
+- `run_checks.py` green (20 checks, 19 controls), baseline holds at 435 sales, 102 migrations applied.
+
+**Open:** the 26 kind disagreements (nine packages stored as unit treatments, one membership, ten products the sheet calls Treatment, three services, three treatments the sheet calls Product) and one shape for the Timmix and Semaglutide pairs, where the active row is not the one holding history. Six items still have no cost and eight prices are still provisional; the sheet lists none of them.
+
+**State at close:** 102 migrations, 20 checks, 189 customers, 435 sales, 66 active catalog items, gross margin 74.964,06.
+
+## 2026-11-21 — Catalog: the package carries its total, the month is the installment
+
+**Goal:** put every catalog item on one level so a sale freezes the price it charges, and make the drift impossible.
+
+**Done:**
+- Migration `20261121110000`: `treatments.duration_months` (4 on the three packages) and the monthly sellers' cost (Timmix 61.00, Semaglutide 48.75). Its first version also moved PCK-0016 to a monthly price; that was reversed the same day, once the owner settled that a package is sold whole.
+- Migration `20261121120000`: 17 active items showed one price in the catalog and froze another on the sale; the intervals were aligned to the catalog column from today.
+- Check **C20** with its control: an active item whose catalog price differs from its open interval is now a failing check.
+- Migration `20261121130000`: PCK-0016 back to **1980 / 490 / 4** and PCK-0015 to **1512 / 195 / 4**. The 495 is the payment installment.
+- Migration `20261121140000`: `TRT-0012` and `TRT-0037` were wrongly priced as the package divided by four. A unit treatment is not a package slice; both were restored to their catalog values (250 / 244 and 1512 / 195), and their real numbers are the owner's call. The monthly supply (`TRT-0023`, 500 / 185) was never touched.
+- The per-unit Botox model was proposed and withdrawn: the owner's master defines `Botox Treatment` as one flat item (220 / 720), with no per-unit item, and the six items checked against the Excel matched the base.
+- `run_checks.py` green with 20 checks; the baseline holds.
+
+**Open:** the catalog reconciliation against the owner's Excel (row by row: cost and price, treatments and products) is the next session's first task. The 14 legacy packages carry no `duration_months` because the master has none; only the three with a duration do. The historical 495 lines stay as installments; restating their cost is a separate call.
+
+**State at close:** 101 migrations, 20 checks, 189 customers, 435 sales, baseline holds.
+
+## 2026-11-21 — Customers normalized: one patient, one row
+
+**Goal:** the import left the same patient as two customers because the name was spelled differently, splitting histories, balances and package cycles. Merge them for good and stop it from happening again.
+
+**Done:**
+- Migration `20261121070000`: `customer_merges`, an append-only record of every retired duplicate (from, into, what moved, why), so a merge is auditable and can be walked back by hand.
+- Merged 23 groups / 26 rows: **215 to 189 customers**, with sales, lines and revenue unchanged (435 / 588 / 219.460,91). Every merged patient was renumbered with exactly one first visit, and the retired spellings went to `customers.aliases`. Claudia Rodriguez stayed separate from Claudio / Caludio / Cluadio: aesthetic history against male-health history, and two of those rows were the same day.
+- Migration `20261121080000` added an alias lookup to `resolve_customer`; the same day the owner set the rule and it was reverted (`20261121100000`): **`aliases` is the historical record of the import spellings, not a matching key.** The clinic searches for the patient and records the sale against them; the create form still refuses the exact normalized name.
+- Visit numbers validated: the 11 customers whose ordinals skip a number or start above 1 have a **show-up appointment** on every missing visit (a visit with no purchase). Luis Gonzalez (appointment 2026-10-14, sale 2026-10-15 as visit 2) and Sandra Rodriguez (appointment 2026-08-28, sale 2026-09-01 as visit 2) are the two that start at 2. No rows are missing.
+- The merge had compressed the ordinal for the two merged patients with an appointment between two sales: **Mikel Cordero** (2026-09-26 was 3, now 4) and **Sandra Desme** (2026-06-18 was 2, now 3). Both corrected; across all 51 no-purchase visits there is now **zero inconsistent ordinal**.
+- The historical baseline was archived as `docs/data/baseline-2026-11-20.json` and **regenerated after the merge**: the per-sale hash includes `customer_id`, so the merge moved it. `run_checks.py` green (19 checks and controls, baseline holds at 435 sales).
+- Package reconstruction on the merged master: 82 Tirzepatide packages — 21 complete, 43 still in their 4 months, **18 abandoned with 18.709,53 pending**.
+
+**Open:** none from this pass. A second spelling typed at creation opens a row by design: the clinic records the sale against the patient already in the master instead of creating one.
+
+**State at close:** 97 migrations, 189 customers, 435 sales, baseline regenerated.
+
+## 2026-11-21 — Expense cost behavior and the owner draw
+
+**Goal:** split the $14,880 payroll line into the assistant's $2,880 wage and the owner's $12,000 draw, classify every expense concept so reports stop matching on names, and tell the person typing what belongs in each concept.
+
+**Done:**
+- Migration `20261121050000_expense_cost_behavior.sql`: `expense_items.cost_behavior` (`fixed | variable | acquisition | owner_draw | capex`, not null, default `fixed`) and `expense_items.guidance`; the 19 concepts classified; `Payroll` renamed to `Staff payroll` with `normalized_name = 'payroll'` kept; a new `Owner draw` concept (`normalized_name = 'owner_draw'`) under the same `payroll` category so the category totals read as before.
+- The historical split, May–Nov 2026: every payroll line of 14,880.00 became 2,880.00 plus one 12,000.00 owner draw, delta 0.00. The guard trigger was disabled inside the migration transaction only; the six closed months kept `status = 'closed'` and their exact totals (C18), and the migration asserts both the split and every closed total before it commits.
+- `expense_items` never had the `normalized_name` trigger its catalog siblings have, so creating a concept from the dialog had always failed on the not-null column. `set_expense_item_normalized_name()` now derives the key from the name and an explicit key still wins.
+- Dialog: picking a concept shows a `Badge` with its cost type, a `Badge` with its category and the guidance line; the new-concept form asks for a cost type and an optional guidance.
+- The dashboard's fixed overhead now sums `cost_behavior = 'fixed'` instead of a hardcoded slug list, so the owner draw stays out of operating overhead (November 10,054.74 instead of 22,054.74). The only name lookup left is the agency retainer blended into CAC, commented as such.
+- Verified: `apply_migrations.py` (93 applied, invariants ok), `run_checks.py` 19 checks and 18 controls green, baseline holds (435 sales), `pnpm typecheck` and `pnpm build` clean, and Playwright in dark mode picked both concepts (badges and guidance read back) and created a test concept, deleted afterwards.
+
+**Open:** none from this change.
+
+**State at close:** 93 migrations applied, 19 checks green, 435 sales, baseline intact.
+
 ## 2026-11-20 — UX audit, and the first three fixes
 
 **Goal:** stop guessing the interface. Audit every screen with fresh eyes, against a real rule set, and fix what the audit ranks first.

@@ -18,7 +18,7 @@ export default async function Page({
       unitType="package"
       icon={Package}
       title="Packages"
-      description="A package is a treatment with unit_type package: quantity one, a price set by the owner and its sessions in the description."
+      description="Bundled treatment packages priced as a single item, with included sessions listed in the description."
       rows={rows}
       query={q}
     />

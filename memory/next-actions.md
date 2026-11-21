@@ -11,15 +11,15 @@ Punch list. One line per action, imperative, with the owner when it is not me. A
 ### UX, from the audit of 2026-11-20 (in the order it ranks them)
 
 U1. [ ] **The dashboards and the sales report are not ours** — the owner builds them with another LLM. Offer the data contract if asked; do not build the screen.
-U2. [ ] **The expenses row must add up**: show returns in the row (or net revenue) so `Left` can be reproduced with a calculator.
-U3. [ ] **Sales details**: a footer total, a real Status (paid / partial / refunded / voided), and a row that opens.
-U4. [ ] **Narrow screens**: the catalog's Name column must never collapse to zero, money columns must be visible without an unmarked inner scroll, and an in-table empty state goes outside the scroll box.
-U5. [ ] **Visible actions on Returns, Voids and Open Items** when the list is empty, instead of an empty state that points at a search that leads nowhere.
-U6. [ ] **Lose nothing**: warn before leaving an unsaved sale, label the two inline patient fields, stop discarding the draft.
-U7. [ ] **Feedback**: a shared route loading state, an error and not-found screen written for the owner, and field-level validation as an alert.
+U2. [x] **The expenses row must add up** — closed 2026-11-21: the month screen was rebuilt with KPI cards, so `Retained cash = Net rev − Total logged` and the returns term is named in the footer. The audit's example was **test data**: the 3.750,00 return it cited was created to exercise the returns flow on 2026-11-20 and deleted after, so `sale_refunds` and `adjustments` are both 0 today. One caveat: the `(−X ret.)` suffix only renders when a month has a return, so it has never been seen against the live base.
+U3. [x] **Sales details** — closed 2026-11-21: a footer total of the filtered set (voided lines excluded), a real Status (Paid / Partial / Unpaid / Refunded / Voided, derived from `sale_money`), and every row opens `/sales/<id>`, a new sale page with its lines, plan, receipts and returns.
+U4. [x] **Narrow screens** — closed 2026-11-21: the catalog hides Code, Cost and Margin below `sm` and prints cost and margin under the name, so the name never collapses (was 0 px at 390); the empty state sits outside the table; every table that still scrolls says so above it (`TableScrollHint`).
+U5. [x] **Visible actions on empty worklists** — closed 2026-11-21: Returns offers "Find a patient's sales" (or "Clear the search"), Voids offers "Record a sale", Open Items offers "Record a sale on a plan", each next to the empty state instead of inside the scroll box.
+U6. [x] **Lose nothing** — closed 2026-11-21: the sale in progress is kept in `sessionStorage` and restored with a "kept in this browser" notice and a Start over button, `beforeunload` warns once a line exists, and the two inline patient fields carry visible labels.
+U7. [x] **Feedback** — closed 2026-11-21: `(app)/loading.tsx` (skeleton with an accessible status), `(app)/error.tsx` (written for the owner, Try again + dashboard) and `(app)/not-found.tsx` + `app/not-found.tsx`; the booking dialog prints its validation under the field, marks it `aria-invalid` and announces it with `role="alert"`.
 
-1. [ ] **Product costs**: 24 products have no cost. Owner to give the averages; `set_item_cost` per product.
-2. [ ] **Confirm the 8 provisional prices**: Arum Life, Arum Vital, FemGuard, Perform Supplement, PRP Microneedling, Radiesse, Regenerative Glow, 4 IVs + 4 Lipotropic Package. They were added with the most repeated price in sales.
+1. [ ] **Six items still have no cost** (owner data): Arum Life, Arum Vital, FemGuard, Perform Supplement, PRP Microneedling, Regenerative Glow. The sheet of 2026-11-21 lists none of them; `set_item_cost` per item once the averages arrive. The other 20 product costs are set and backdated.
+2. [ ] **Confirm the 8 provisional prices**: Arum Life, Arum Vital, FemGuard, Perform Supplement, PRP Microneedling, Radiesse, Regenerative Glow, 4 IVs + 4 Lipotropic Package. They were added with the most repeated price in sales, and the sheet does not list any of them either, so the reconciliation could not confirm or correct them.
 3. [ ] **Sales report** with the filters the owner defines.
 4. [ ] **Branded PDF** of the patient report (logo, gold and navy per `docs/branding.md`).
 5. [ ] Revoke the `sbp_` token in `.env.local` when the work pauses.
@@ -28,12 +28,28 @@ U7. [ ] **Feedback**: a shared route loading state, an error and not-found scree
 8. [ ] **Add `SUPABASE_PUBLISHABLE_KEY`** to `web/.env.local` (Project Settings → API keys), so the auth client stops falling back to the secret key.
 9. [ ] **Decide the clinic account**: the email that signs in, whether Google sign-in follows, and who resets the password (today it is the Supabase dashboard, with no self-service screen).
 
+### Catalog (owner decisions)
+
+- [ ] **Decide the 26 kind disagreements** the reconciliation found, one group at a time: nine packages stored as unit treatments, one membership as a unit, ten products the sheet calls Treatment, three services the sheet calls Treatment, three treatments the sheet calls Product. A kind is never rewritten to fix a past sale; the answer is either leave it or a new row of the right kind with the old one retired. Detail in [`../docs/catalog-reconciliation-2026-11-21.md`](../docs/catalog-reconciliation-2026-11-21.md) section 4.
+- [ ] **One shape for the two package pairs**: `PCK-0017` Timmix is active with 0 lines while `TRT-0012` holds 32; `TRT-0037` Semaglutide is active with 13 lines while `PCK-0015` holds 0. Same price and cost either way, so only the sale screen's quantity lock differs.
+- [ ] Restate the historical cost of the package lines (186 Tirzepatide, 32 Timmix, 13 Semaglutide) or accept them understated; it is one `set_item_cost` with a past date.
+
 ### Owner data (not blockers)
 
 - [ ] Average purchase cost per product; most products have none today.
 - [ ] Confirm the 8 items added from sales with a provisional price.
 - [ ] Confirm the two payment lines kept as services (`Payment completion…` 362, `Remaining Balance` 731).
 - [ ] Confirm whether `Eterna IV Series Membership` becomes `unit_type = membership` (it is still a unit treatment, `TRT-0028`).
+
+## Done on 2026-11-21
+
+- [x] **Catalog reconciled against the owner's sheet** ([`../docs/catalog-reconciliation-2026-11-21.md`](../docs/catalog-reconciliation-2026-11-21.md)): 59 rows, 54 unique names, **0 price differences** and 19 cost differences, plus 26 rows where the sheet's kind disagrees with the base and 10 items the sheet does not list. `scripts/reconcile_catalog.py` reproduces it read-only.
+- [x] **20 product costs set from the sheet and backdated to 2026-05-01** (migration `20261121150000`): the estimate and the $1.00 placeholder are gone, one open interval each. May–October margin +3.725,10, November −425,00, net **+3.300,10**; total gross margin 71.663,96 → 74.964,06. Checks and baseline green.
+
+- [x] **Catalog integrity**: the three packages carry their total with `duration_months = 4` (PCK-0016 1980 / 490, PCK-0017 1000 / 244, PCK-0015 1512 / 195); the unit rows `TRT-0012` and `TRT-0037` were restored to their own values after a wrong attempt to price them as the package ÷ 4; 17 catalog prices were aligned to their intervals; and **C20** now fails if the catalog column and the open interval ever differ. 20 checks green.
+
+- [x] **Customers normalized** (migrations `20261121070000` + `20261121080000`): 23 duplicate groups (26 rows) merged into one patient each, spellings moved to `aliases`, visits renumbered, every merge recorded in `customer_merges`. 215 → 189 customers with sales, lines and revenue unchanged (435 / 588 / 219.460,91). `resolve_customer` now resolves a recorded alias. The historical baseline was archived as `baseline-2026-11-20.json` and regenerated; `run_checks.py` green.
+- [x] **Expenses classified, and the owner draw split** (migration `20261121050000`): `cost_behavior` and `guidance` on every concept; `Staff payroll` 2,880.00 + a new `Owner draw` 12,000.00 for May–Nov 2026 with a 0.00 delta, so the six closed months kept `status = 'closed'` and their exact totals (C18); the dashboard's fixed overhead now reads `cost_behavior = 'fixed'` instead of a slug list. The dialog shows the type, the category and the guidance, and a new concept now saves (the missing `normalized_name` trigger). `run_checks.py`, `pnpm typecheck` and `pnpm build` clean.
 
 ## Done on 2026-11-20
 

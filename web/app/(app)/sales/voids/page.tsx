@@ -2,8 +2,10 @@ import Link from "next/link"
 import { Ban } from "lucide-react"
 
 import { PatientSearch } from "@/components/patient-search"
+import { TableScrollHint } from "@/components/table-scroll-hint"
 import { VoidSaleDialog } from "@/components/void-sale-dialog"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Empty,
   EmptyDescription,
@@ -40,9 +42,9 @@ export default async function Page({
   const [sales, history] = await Promise.all([listVoidableSales(q), listVoidedSales(10)])
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-semibold tracking-tight">Voids</h2>
+        <h1 className="text-2xl font-semibold tracking-tight">Voids</h1>
         <p className="text-sm text-muted-foreground">
           Sales entered by mistake, with no money collected. They never happened.
         </p>
@@ -58,39 +60,50 @@ export default async function Page({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border">
-        <Table className="table-fixed">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-28">Date</TableHead>
-              <TableHead className="w-56">Patient</TableHead>
-              <TableHead className="w-32 text-right">Total</TableHead>
-              <TableHead className="w-32 text-right">Collected</TableHead>
-              <TableHead className="w-28 text-right">·</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sales.length === 0 ? (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={5} className="p-0">
-                  <Empty className="rounded-none border-0">
-                    <EmptyHeader>
-                      <EmptyMedia variant="icon">
-                        <Ban />
-                      </EmptyMedia>
-                      <EmptyTitle>
-                        {q ? "That patient has nothing to void" : "Nothing to void today"}
-                      </EmptyTitle>
-                      <EmptyDescription>
-                        A sale appears here only when nothing was collected. Money collected is
-                        corrected with a return, not a void.
-                      </EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
-                </TableCell>
-              </TableRow>
-            ) : (
-              sales.map((sale) => (
+      {sales.length === 0 ? (
+        <div className="rounded-lg border">
+          <Empty className="rounded-none border-0">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Ban />
+              </EmptyMedia>
+              <EmptyTitle>
+                {q ? "That patient has nothing to void" : "Nothing to void today"}
+              </EmptyTitle>
+              <EmptyDescription>
+                A sale appears here only when nothing was collected. Money collected is
+                corrected with a return, not a void.
+              </EmptyDescription>
+              <Button
+                variant="outline"
+                size="sm"
+                nativeButton={false}
+                render={<Link href={q ? "/sales/voids" : "/sales/new"} />}
+              >
+                {q ? "Clear the search" : "Record a sale"}
+              </Button>
+            </EmptyHeader>
+          </Empty>
+        </div>
+      ) : (
+        <>
+          <TableScrollHint />
+
+          <div className="overflow-hidden rounded-lg border">
+            <Table className="table-fixed">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-28">Date</TableHead>
+                  <TableHead className="w-56">Patient</TableHead>
+                  <TableHead className="w-32 text-right">Total</TableHead>
+                  <TableHead className="w-32 text-right">Collected</TableHead>
+                  <TableHead className="w-28 text-right">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sales.map((sale) => (
                 <TableRow key={sale.saleId}>
                   <TableCell className="whitespace-nowrap">
                     {formatClinicDay(sale.occurredOn)}
@@ -113,11 +126,12 @@ export default async function Page({
                     <VoidSaleDialog sale={sale} />
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
+      )}
 
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
@@ -167,7 +181,12 @@ export default async function Page({
                     <TableCell className="truncate text-muted-foreground" title={row.reason ?? undefined}>
                       {row.reason ?? "—"}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{row.voidedBy ?? "—"}</TableCell>
+                    <TableCell
+                      className="truncate text-muted-foreground"
+                      title={row.voidedBy ?? undefined}
+                    >
+                      {row.voidedBy ?? "—"}
+                    </TableCell>
                   </TableRow>
                 ))
               )}

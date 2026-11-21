@@ -36,7 +36,7 @@ export default async function Page({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-semibold tracking-tight">New patient</h2>
+        <h1 className="text-2xl font-semibold tracking-tight">New patient</h1>
         <p className="text-sm text-muted-foreground">
           Search first. A duplicate hides their history and splits their money.
         </p>
@@ -102,7 +102,7 @@ export default async function Page({
       <Separator />
 
       <div className="flex flex-col gap-1">
-        <h3 className="text-lg font-medium">Or create a new patient</h3>
+        <h2 className="text-lg font-medium">Or create a new patient</h2>
         <p className="text-sm text-muted-foreground">
           Only if the search above found nobody.
         </p>

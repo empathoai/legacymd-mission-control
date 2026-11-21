@@ -1,28 +1,13 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ArrowLeft, Wallet } from "lucide-react"
+import { ArrowLeft, TrendingDown, TrendingUp } from "lucide-react"
 
 import { ExpenseEntryDialog } from "@/components/expense-entry-dialog"
-import { ExpenseVoidDialog } from "@/components/expense-void-dialog"
+import { ExpenseMonthLines } from "@/components/expense-month-lines"
+import { KpiCard } from "@/components/kpi-card"
 import { MonthStatusActions } from "@/components/month-status-actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { formatClinicDay } from "@/lib/dates"
 import {
   getExpenseMonth,
@@ -30,13 +15,9 @@ import {
   listExpenseItems,
   listSuppliers,
 } from "@/lib/expenses"
+import { formatMoneyWhole } from "@/lib/format"
 
 export const dynamic = "force-dynamic"
-
-const money = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-})
 
 function monthLabel(period: string) {
   return new Intl.DateTimeFormat("en-US", {
@@ -63,9 +44,13 @@ export default async function Page({
   ])
 
   const open = month.status === "open"
+  const operatingPct =
+    month.netRevenue > 0
+      ? Math.round((month.operatingProfit / month.netRevenue) * 100)
+      : 0
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3">
         <Button
           variant="ghost"
@@ -79,9 +64,17 @@ export default async function Page({
         </Button>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-semibold tracking-tight">{monthLabel(month.period)}</h2>
-            {open ? <Badge>Open</Badge> : <Badge variant="secondary">Closed</Badge>}
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {monthLabel(month.period)}
+            </h1>
+            {open ? (
+              <Badge variant="gold">Open</Badge>
+            ) : (
+              <Badge variant="secondary">
+                Closed {month.closedAt ? formatClinicDay(month.closedAt.slice(0, 10)) : ""}
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {open ? (
@@ -105,147 +98,85 @@ export default async function Page({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card>
-          <CardHeader>
-            <CardDescription>Sold</CardDescription>
-            <CardTitle className="text-2xl">{money.format(month.sold)}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">
-              {month.returned > 0
-                ? `${money.format(month.returned)} returned · ${money.format(month.netRevenue)} net`
-                : "No returns this month"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardDescription>Expenses</CardDescription>
-            <CardTitle className="text-2xl">{money.format(month.total)}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">
+        <KpiCard
+          label="Clinic OpEx"
+          value={formatMoneyWhole(month.clinicOpEx)}
+          action={
+            <Badge variant="secondary">
               {month.entries} live line{month.entries === 1 ? "" : "s"}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardDescription>Left after expenses</CardDescription>
-            <CardTitle className={`text-2xl ${month.result < 0 ? "text-destructive" : ""}`}>
-              {money.format(month.result)}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardDescription>Closed</CardDescription>
-            <CardTitle className="text-base font-medium">
-              {month.closedAt ? formatClinicDay(month.closedAt.slice(0, 10)) : "Still open"}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
+            </Badge>
+          }
+          footer={
+            <span className="truncate">
+              Fixed {formatMoneyWhole(month.fixed)} · Var/Acq{" "}
+              {formatMoneyWhole(month.variable + month.acquisition)}
+            </span>
+          }
+        />
 
-      {month.categories.length > 0 ? (
-        <div className="flex flex-wrap gap-2">
-          {month.categories.map((category) => (
-            <div
-              key={category.label}
-              className="flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm"
+        <KpiCard
+          label="Clinic operating profit"
+          value={formatMoneyWhole(month.operatingProfit)}
+          action={
+            <Badge
+              variant={month.operatingProfit >= 0 ? "positive" : "destructive"}
+              className="gap-1"
             >
-              <span className="text-muted-foreground">{category.label}</span>
-              <span className="font-medium tabular-nums">{money.format(category.amount)}</span>
-            </div>
-          ))}
-        </div>
-      ) : null}
+              {month.operatingProfit >= 0 ? (
+                <TrendingUp className="size-3" />
+              ) : (
+                <TrendingDown className="size-3" />
+              )}
+              {operatingPct}% op.
+            </Badge>
+          }
+          footer={
+            <span className="truncate">
+              Net rev {formatMoneyWhole(month.netRevenue)}
+              {month.returned > 0 ? ` (−${formatMoneyWhole(month.returned)} ret.)` : ""}
+            </span>
+          }
+        />
 
-      <div className="overflow-hidden rounded-lg border">
-        <Table className="table-fixed">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-64">Expense</TableHead>
-              <TableHead className="w-44">Category</TableHead>
-              <TableHead className="w-40">Supplier</TableHead>
-              <TableHead className="w-28 text-right">Amount</TableHead>
-              <TableHead>Note</TableHead>
-              <TableHead className="w-24 text-right">·</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {month.lines.length === 0 ? (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={6} className="p-0">
-                  <Empty className="rounded-none border-0">
-                    <EmptyHeader>
-                      <EmptyMedia variant="icon">
-                        <Wallet />
-                      </EmptyMedia>
-                      <EmptyTitle>No expenses in this month</EmptyTitle>
-                      <EmptyDescription>
-                        {open
-                          ? "Add the rent, the payroll, the labs."
-                          : "The month closed with no lines."}
-                      </EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
-                </TableCell>
-              </TableRow>
-            ) : (
-              month.lines.map((line) => (
-                <TableRow key={line.id} className={line.voided ? "opacity-60" : undefined}>
-                  <TableCell className="truncate" title={line.itemName}>
-                    {line.voided ? (
-                      <span className="line-through">{line.itemName}</span>
-                    ) : (
-                      line.itemName
-                    )}
-                  </TableCell>
-                  <TableCell className="truncate text-muted-foreground">
-                    {line.categoryLabel}
-                  </TableCell>
-                  <TableCell className="truncate text-muted-foreground">
-                    {line.supplierName ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {money.format(line.amount)}
-                  </TableCell>
-                  <TableCell className="truncate text-muted-foreground" title={line.voidReason ?? line.note ?? undefined}>
-                    {line.voided ? (
-                      <Badge variant="destructive">Voided · {line.voidReason}</Badge>
-                    ) : (
-                      (line.note ?? "—")
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-end gap-1">
-                      {open && !line.voided ? (
-                        <>
-                          <ExpenseEntryDialog
-                            periodId={month.id}
-                            period={month.period}
-                            items={items}
-                            suppliers={suppliers}
-                            categories={categories}
-                            lines={month.lines}
-                            entry={line}
-                          />
-                          <ExpenseVoidDialog
-                            id={line.id}
-                            period={month.period}
-                            itemName={line.itemName}
-                          />
-                        </>
-                      ) : null}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+        <KpiCard
+          label="Owner draw & CapEx"
+          value={formatMoneyWhole(month.ownerDraw + month.capex)}
+          action={<Badge variant="gold">{formatMoneyWhole(month.ownerDraw)} draw</Badge>}
+          footer={
+            <span className="truncate">
+              {month.capex > 0
+                ? `Includes ${formatMoneyWhole(month.capex)} one-time CapEx`
+                : "Separated from operating overhead"}
+            </span>
+          }
+        />
+
+        <KpiCard
+          label="Retained cash"
+          value={formatMoneyWhole(month.result)}
+          valueClassName={month.result < 0 ? "text-destructive" : undefined}
+          action={
+            <Badge variant={month.result >= 0 ? "positive" : "destructive"}>
+              {month.result >= 0 ? "Surplus" : "Deficit"}
+            </Badge>
+          }
+          footer={
+            <span className="truncate">
+              Total logged {formatMoneyWhole(month.total)}
+            </span>
+          }
+        />
       </div>
+
+      <ExpenseMonthLines
+        periodId={month.id}
+        period={month.period}
+        open={open}
+        lines={month.lines}
+        items={items}
+        suppliers={suppliers}
+        categories={categories}
+      />
 
       {month.audit.length > 0 ? (
         <div className="flex flex-col gap-2">
@@ -253,8 +184,8 @@ export default async function Page({
           <ul className="flex flex-col gap-1 text-sm text-muted-foreground">
             {month.audit.map((row, index) => (
               <li key={`${row.changedAt}-${index}`}>
-                {formatClinicDay(row.changedAt.slice(0, 10))} · {row.oldStatus} → {row.newStatus} ·{" "}
-                {row.reason}
+                {formatClinicDay(row.changedAt.slice(0, 10))} · {row.oldStatus} →{" "}
+                {row.newStatus} · {row.reason}
               </li>
             ))}
           </ul>

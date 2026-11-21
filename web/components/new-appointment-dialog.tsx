@@ -78,6 +78,9 @@ export function NewAppointmentDialog({
   const [sourceId, setSourceId] = useState("")
   const [dayOpen, setDayOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [errorField, setErrorField] = useState<
+    "patient" | "category" | "source" | null
+  >(null)
   const [pending, startTransition] = useTransition()
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -110,23 +113,28 @@ export function NewAppointmentDialog({
     setCategoryId("")
     setSourceId("")
     setError(null)
+    setErrorField(null)
   }
 
   function submit(event: React.FormEvent) {
     event.preventDefault()
     setError(null)
+    setErrorField(null)
 
     const name = patient?.fullName ?? newName.trim()
     if (!patient && name.length < 2) {
       setError("Search the patient, or type a name of at least 2 letters.")
+      setErrorField("patient")
       return
     }
     if (!categoryId) {
       setError("Pick what they expect.")
+      setErrorField("category")
       return
     }
     if (!sourceId) {
       setError("Pick how they found us.")
+      setErrorField("source")
       return
     }
 
@@ -144,6 +152,7 @@ export function NewAppointmentDialog({
       })
 
       if (!result.ok) {
+        setErrorField(null)
         setError(result.error)
         return
       }
@@ -200,7 +209,20 @@ export function NewAppointmentDialog({
                       onChange={(event) => setPatientQuery(event.target.value)}
                       placeholder="Type at least 2 letters"
                       autoFocus
+                      aria-invalid={errorField === "patient" || undefined}
+                      aria-describedby={
+                        errorField === "patient" ? "appointment-patient-error" : undefined
+                      }
                     />
+                    {errorField === "patient" && error ? (
+                      <p
+                        id="appointment-patient-error"
+                        role="alert"
+                        className="text-sm text-destructive"
+                      >
+                        {error}
+                      </p>
+                    ) : null}
                     {matches.length > 0 ? (
                       <ul className="max-h-44 divide-y overflow-auto rounded-lg border text-sm">
                         {matches.map((match) => (
@@ -344,7 +366,11 @@ export function NewAppointmentDialog({
                     value={categoryId || null}
                     onValueChange={(next) => setCategoryId((next as string | null) ?? "")}
                   >
-                    <SelectTrigger id="appointment-category" className="w-full">
+                    <SelectTrigger
+                      id="appointment-category"
+                      className="w-full"
+                      aria-invalid={errorField === "category" || undefined}
+                    >
                       <SelectValue placeholder="What they are coming for" />
                     </SelectTrigger>
                     <SelectContent alignItemWithTrigger={false}>
@@ -355,6 +381,11 @@ export function NewAppointmentDialog({
                       ))}
                     </SelectContent>
                   </Select>
+                  {errorField === "category" && error ? (
+                    <p role="alert" className="text-sm text-destructive">
+                      {error}
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="flex flex-col gap-2">
@@ -365,10 +396,19 @@ export function NewAppointmentDialog({
                     onChange={setSourceId}
                     id="appointment-source"
                   />
+                  {errorField === "source" && error ? (
+                    <p role="alert" className="text-sm text-destructive">
+                      {error}
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
-              {error ? <p className="text-sm text-destructive">{error}</p> : null}
+              {error && errorField === null ? (
+                <p role="alert" className="text-sm text-destructive">
+                  {error}
+                </p>
+              ) : null}
             </div>
 
             <DialogFooter>

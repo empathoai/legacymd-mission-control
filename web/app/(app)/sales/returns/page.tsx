@@ -4,7 +4,9 @@ import { RotateCcw } from "lucide-react"
 import { PatientSearch } from "@/components/patient-search"
 import { ReturnSaleDialog } from "@/components/return-sale-dialog"
 import { SettleReturnDialog } from "@/components/settle-return-dialog"
+import { TableScrollHint } from "@/components/table-scroll-hint"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Empty,
   EmptyDescription,
@@ -46,9 +48,9 @@ export default async function Page({
   ])
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h2 className="text-2xl font-semibold tracking-tight">Returns</h2>
+        <h1 className="text-2xl font-semibold tracking-tight">Returns</h1>
         <p className="text-sm text-muted-foreground">
           Sales that can still give money back. The sale stays; the money returns.
         </p>
@@ -64,41 +66,53 @@ export default async function Page({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border">
-        <Table className="table-fixed">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-28">Date</TableHead>
-              <TableHead className="w-48">Patient</TableHead>
-              <TableHead className="w-24 text-right">Sold</TableHead>
-              <TableHead className="w-24 text-right">Collected</TableHead>
-              <TableHead className="w-24 text-right">Returned</TableHead>
-              <TableHead className="w-28 text-right">Can return</TableHead>
-              <TableHead className="w-24 text-right">·</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sales.length === 0 ? (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={7} className="p-0">
-                  <Empty className="rounded-none border-0">
-                    <EmptyHeader>
-                      <EmptyMedia variant="icon">
-                        <RotateCcw />
-                      </EmptyMedia>
-                      <EmptyTitle>
-                        {q ? "That patient has nothing to return" : "Nothing to return today"}
-                      </EmptyTitle>
-                      <EmptyDescription>
-                        A sale with money collected appears here until it is returned in full.
-                        Search a patient to look further back.
-                      </EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
-                </TableCell>
-              </TableRow>
-            ) : (
-              sales.map((sale) => (
+      {sales.length === 0 ? (
+        <div className="rounded-lg border">
+          <Empty className="rounded-none border-0">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <RotateCcw />
+              </EmptyMedia>
+              <EmptyTitle>
+                {q ? "That patient has nothing to return" : "Nothing to return today"}
+              </EmptyTitle>
+              <EmptyDescription>
+                A sale with money collected appears here until it is returned in full.
+              </EmptyDescription>
+              <Button
+                variant="outline"
+                size="sm"
+                nativeButton={false}
+                render={
+                  <Link href={q ? "/sales/returns" : "/patients/report"} />
+                }
+              >
+                {q ? "Clear the search" : "Find a patient's sales"}
+              </Button>
+            </EmptyHeader>
+          </Empty>
+        </div>
+      ) : (
+        <>
+          <TableScrollHint />
+
+          <div className="overflow-hidden rounded-lg border">
+            <Table className="table-fixed">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-28">Date</TableHead>
+                  <TableHead className="w-48">Patient</TableHead>
+                  <TableHead className="w-24 text-right">Sold</TableHead>
+                  <TableHead className="w-24 text-right">Collected</TableHead>
+                  <TableHead className="w-24 text-right">Returned</TableHead>
+                  <TableHead className="w-28 text-right">Can return</TableHead>
+                  <TableHead className="w-24 text-right">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sales.map((sale) => (
                 <TableRow key={sale.saleId}>
                   <TableCell className="whitespace-nowrap">
                     {formatClinicDay(sale.occurredOn)}
@@ -127,11 +141,12 @@ export default async function Page({
                     <ReturnSaleDialog sale={sale} methods={methods} />
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
+      )}
 
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
@@ -150,7 +165,9 @@ export default async function Page({
                 <TableHead className="w-24 text-right">Amount</TableHead>
                 <TableHead className="w-24">Method</TableHead>
                 <TableHead className="w-24">State</TableHead>
-                <TableHead className="text-right">·</TableHead>
+                <TableHead className="text-right">
+                  <span className="sr-only">Actions</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

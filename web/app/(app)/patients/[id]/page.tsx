@@ -1,8 +1,9 @@
 import Link from "next/link"
-import { ArrowLeft, CalendarDays, Receipt } from "lucide-react"
+import { ArrowLeft, Receipt } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Empty,
   EmptyDescription,
@@ -52,12 +53,14 @@ const statusLabel: Record<string, string> = {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col gap-1 rounded-lg border bg-card p-4">
-      <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-        {label}
-      </span>
-      <span className="text-xl font-semibold tabular-nums">{value}</span>
-    </div>
+    <Card size="sm">
+      <CardHeader>
+        <CardDescription className="text-xs font-medium tracking-wide uppercase">
+          {label}
+        </CardDescription>
+        <CardTitle className="text-xl font-semibold tabular-nums">{value}</CardTitle>
+      </CardHeader>
+    </Card>
   )
 }
 
@@ -104,15 +107,15 @@ export default async function Page({
           Patient report
         </Button>
         <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-3xl font-semibold tracking-tight">{patient.fullName}</h2>
+          <h1 className="text-2xl font-semibold tracking-tight">{patient.fullName}</h1>
           {patient.isOverdue ? (
             <Badge variant="destructive">Overdue</Badge>
           ) : patient.balance > 0 ? (
-            <Badge>Open</Badge>
+            <Badge variant="gold">Open</Badge>
           ) : patient.visits === 0 ? (
             <Badge variant="secondary">No visits</Badge>
           ) : (
-            <Badge variant="secondary">Settled</Badge>
+            <Badge variant="positive">Settled</Badge>
           )}
         </div>
         <p className="text-sm text-muted-foreground">
@@ -134,7 +137,7 @@ export default async function Page({
       </div>
 
       <section className="flex flex-col gap-3">
-        <h3 className="text-lg font-medium">Purchases</h3>
+        <h2 className="text-lg font-medium">Purchases</h2>
         <div className="overflow-hidden rounded-lg border">
           <Table>
             <TableHeader>
@@ -150,8 +153,18 @@ export default async function Page({
             <TableBody>
               {patient.sales.length === 0 ? (
                 <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={6} className="text-muted-foreground">
-                    No purchase yet.
+                  <TableCell colSpan={6} className="p-0">
+                    <Empty className="rounded-none border-0">
+                      <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                          <Receipt />
+                        </EmptyMedia>
+                        <EmptyTitle>No purchases yet</EmptyTitle>
+                        <EmptyDescription>
+                          Sales recorded for this patient will appear here.
+                        </EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -195,7 +208,7 @@ export default async function Page({
 
       {patient.appointments.length > 0 ? (
         <section className="flex flex-col gap-3">
-          <h3 className="text-lg font-medium">Appointments</h3>
+          <h2 className="text-lg font-medium">Appointments</h2>
           <div className="overflow-hidden rounded-lg border">
             <Table>
               <TableHeader>
@@ -220,11 +233,6 @@ export default async function Page({
           </div>
         </section>
       ) : null}
-
-      <p className="flex items-center gap-2 text-sm text-muted-foreground">
-        <CalendarDays className="size-4" />
-        Selling and booking from this screen arrive with those modules.
-      </p>
     </div>
   )
 }

@@ -139,7 +139,7 @@ not (unit). One of the two pairs should follow the other.
 | PROD-0025 | Perform Supplement | Product | 50.00 | 1.00 |
 | TRT-0033 | PRP Microneedling | Treatment | 135.00 | — |
 | TRT-0018 | Radiesse | Treatment | 1250.00 | 875.00 |
-| TRT-0035 | Regenerative Glow Protocol for Annette | Treatment | 1357.50 | — |
+| TRT-0035 | Regenerative Glow Protocol | Treatment | 1357.50 | — |
 | SRV-0004 | Payment completion from another treat. | Service | 362.00 | — |
 | SRV-0005 | Remaining Balance | Service | 731.00 | — |
 

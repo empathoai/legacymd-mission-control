@@ -235,6 +235,8 @@ Expected today: **56 rows** — the intervals that start at New York midnight re
 
 ### Task 7: The build is pinned and its production graph is clean
 
+**Status: done 2026-11-21.** `engines.node >= 22`, `packageManager pnpm@11.22.0`, `web/.nvmrc` = 22, and `shadcn` moved to `devDependencies`. Verified: `pnpm audit --prod` **0 vulnerabilities** (was 1 moderate), `pnpm install --frozen-lockfile` 0, `pnpm build` 0. Caveat to keep: the build reads `shadcn/tailwind.css`, so the host must install devDependencies (Vercel does).
+
 **Files:**
 - Modify: `web/package.json` (add `"engines": { "node": ">=22" }` and `"packageManager": "pnpm@11.22.0"`; move `shadcn` from `dependencies` to `devDependencies`)
 - Create: `web/.nvmrc` containing `22`

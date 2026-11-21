@@ -74,7 +74,7 @@ cent (May 36.732,50; history 219.460,91; November 18.599,92). Details in
 
 ## 6. Blockers before publishing
 
-1. The publishable key is missing, so the auth client and the middleware run with the secret key.
+1. ~~The publishable key is missing, so the auth client and the middleware run with the secret key.~~ **Closed 2026-11-21**: the key is in `web/.env.local`; a production server answers 307 on a protected route and 200 on `/login`.
 2. The mobile drawer does not close on navigation; its Close button is 0×0 and Escape does nothing.
 3. `/expenses/<period>` is 680 px wide at 390; the filter strip does not wrap.
 4. Returns and Voids lose their action column at 390 (`table-fixed` gives it 0 px).

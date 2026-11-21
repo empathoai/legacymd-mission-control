@@ -33,6 +33,8 @@
 
 ### Task 1: The publishable key stops the auth fallback
 
+**Status: done 2026-11-21.** Probe exit 0 (`publishable present: true`, starts with `sb_publishable_`, not a secret); `pnpm build` exit 0; the production server answered **307** on `/sales/details` and **200** on `/login`, so the gate verified claims with the publishable key and did not fall back to the secret.
+
 **Files:**
 - Modify: `web/.env.local` (add `SUPABASE_PUBLISHABLE_KEY`; value copied from the root `.env.local`)
 - Verify: `web/lib/supabase/auth.ts:20-23`, `web/proxy.ts:15-18`

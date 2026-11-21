@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
+/* Vendored from shadcn@4.23.0 (dist/tailwind.css) so the build does not depend on a
+   devDependency: the host installs production packages and must still compile. */
+@import "./shadcn-tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 

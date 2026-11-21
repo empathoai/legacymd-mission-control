@@ -9,7 +9,7 @@ out/
 build/
 dist/
 
-# local env — never commit real credentials
+# local env - never commit real credentials
 .env
 .env.*
 !.env.example
@@ -18,11 +18,18 @@ dist/
 .tmp/
 *.log
 
-# patient data — stays on disk, never in git history
+# agent skills: third-party bundles, installed from skills-lock.json
+.agents/skills/
+
+# patient data - stays on disk, never in git history
 docs/*.xlsx
 docs/data/*.xlsx
 docs/data/customers.csv
 docs/data/customers-identities.md
+docs/*.csv
+
+# evidence screenshots taken while verifying a change
+shots/
 
 # os / editor
 .DS_Store
@@ -33,8 +40,3 @@ Thumbs.db
 # python bytecode
 __pycache__/
 *.pyc
-# patient exports - never in git
-docs/*.csv
-# evidence screenshots
-shots/
-

@@ -46,8 +46,10 @@ roughly 70–130% of the price); the November interval was `1.00` for all 20. Bo
 each product now carries one interval from 2026-05-01 to infinity with the sheet's number,
 and the January–April interval, already the sheet's number, closes on 2026-05-01.
 
-The four active products still on the $1.00 placeholder are the four the sheet does not list:
-Arum Life, Arum Vital, FemGuard, Perform Supplement. Their cost waits for the owner.
+The four active products the sheet does not list no longer read $1.00: migration `20261121160000`
+reopened the estimate the base already held for them — Arum Life and Arum Vital at 57.40,
+FemGuard and Perform Supplement at 35.00 — so their margin reads 30% instead of 98%. Those are
+still estimates; the clinic's purchase cost is what makes them true.
 
 ## 2. What the change did to the months (verified against `monthly_pl`)
 
@@ -65,6 +67,10 @@ Arum Life, Arum Vital, FemGuard, Perform Supplement. Their cost waits for the ow
 May–October rise because the estimate charged more than the real cost. November falls
 because the base had been charging $1.00 from 2026-11-01. Revenue, cash and the closed
 expense months do not move: only the cost of the goods reads differently.
+
+Later the same day, `20261121160000` replaced the $1.00 of four products the sheet omits with
+the estimate the base already held (57.40 / 57.40 / 35.00 / 35.00). That takes another 90,40
+from November: the month reads **6.590,82** and the total **74.873,66**.
 
 ## 3. No amount in the sheet (4)
 

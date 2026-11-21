@@ -1,5 +1,10 @@
 import type { NextConfig } from "next"
 
+// React's development build uses eval() to rebuild callstacks; the production
+// build never does. The CSP allows it in development only, so the strict policy
+// stays on everything that ships.
+const isDev = process.env.NODE_ENV !== "production"
+
 const SECURITY_HEADERS = [
   // No browser code talks to Supabase: everything is server-side, so `self` is
   // the only origin the page needs. `unsafe-inline` stays for styles and for
@@ -15,8 +20,10 @@ const SECURITY_HEADERS = [
       "img-src 'self' data: blob:",
       "font-src 'self' data:",
       "style-src 'self' 'unsafe-inline'",
-      "script-src 'self' 'unsafe-inline'",
-      "connect-src 'self'",
+      isDev
+        ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+        : "script-src 'self' 'unsafe-inline'",
+      "connect-src 'self'" + (isDev ? " ws: http://localhost:*" : ""),
       "upgrade-insecure-requests",
     ].join("; "),
   },

@@ -80,6 +80,7 @@ export async function settleReturnAction(id: string, on: string): Promise<Action
     p_id: id,
     p_on: on,
     p_external_id: null,
+    p_by: await actor(),
   })
 
   if (error) return { ok: false, error: readable(error.message) }

@@ -76,6 +76,8 @@ Run: `pnpm build` in `web/` — exit 0. Then delete `shots/probe-env.mjs`. No co
 
 ### Task 2: A cancelled installment writes off what it stops expecting
 
+**Status: done 2026-11-21.** Probe on a 100,00 sale paid 50/50: cancelling the second installment writes `revenue_delta −50.00`, the balance goes to **0.00**, C01 stays at **0 rows**, C21 at **0 rows** and its control fires. The suite is now 21 checks with 20 controls.
+
 **Files:**
 - Create: `supabase/migrations/20261122100000_void_payment_writes_off.sql`
 - Create: `supabase/checks/c21_cancelled_installment_writes_off.sql`

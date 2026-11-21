@@ -34,9 +34,7 @@ lock-down as an invariant and stops on the first failure.
 
 Verified in rollback, still open, in priority order:
 
-1. **`void_payment` writes no write-off.** Cancelling an installment leaves `sold 100, planned 50,
-   written_off 0`, so C01 reports the sale and the balance keeps charging a forgiven cuota. D5
-   says the default is to forgive; the function does not create the adjustment.
+1. ~~**`void_payment` writes no write-off.**~~ **Closed 2026-11-21** (`20261122100000`): cancelling an installment inserts the `write_off` adjustment for what it still expected; probe −50,00, balance 0,00, C01 green, check C21 with its control.
 2. **No date guards**: `create_sale`, `record_receipt`, `register_return` and `settle_return`
    accept 2099 and land in a future month; `settle_return` records no actor.
 3. **`set_item_price` with a past date** updates the catalog column even when a newer interval

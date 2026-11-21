@@ -11,7 +11,7 @@ Punch list. One line per action, imperative, with the owner when it is not me. A
 ### Pre-release corrections — plan: [`../docs/superpowers/plans/2026-11-21-pre-release-corrections.md`](../docs/superpowers/plans/2026-11-21-pre-release-corrections.md)
 
 1. [x] **Task 1 — publishable key**: `SUPABASE_PUBLISHABLE_KEY` in `web/.env.local`, verified 2026-11-21: probe exit 0, `pnpm build` exit 0, and a production server answered 307 on `/sales/details` and 200 on `/login` — the gate no longer falls back to the secret.
-2. [ ] **Task 2 — a cancelled installment writes off what it stops expecting**: `void_payment` creates the adjustment, check C21 + control; C01 must stay green.
+2. [x] **Task 2 — a cancelled installment writes off what it stops expecting**: `void_payment` now inserts the `write_off` adjustment for what it still expected (`20261122100000`). Probe: −50,00 written off, balance 0,00, C01 green. Check C21 + control, suite 21 checks / 20 controls.
 3. [ ] **Task 3 — date guards**: no future `occurred_on`/`received_on`/`refunded_on`, `billed_at >= occurred_on`, `settle_return` gains `p_by`. Check C22 + control.
 4. [ ] **Task 4 — `set_item_price` never moves the catalog backwards** when a later interval exists.
 5. [ ] **Task 5 — `cost_on(date)` at clinic midnight**: 56 of 137 intervals answer the wrong cost today; check C23.

@@ -10,6 +10,8 @@ Punch list. One line per action, imperative, with the owner when it is not me. A
 
 ### UX, from the audit of 2026-11-20 (in the order it ranks them)
 
+**The owner's list since 2026-11-21.** This session does not design or build screens; everything below is the owner's with another agent. It is kept here because the data questions behind a finding are still this session's to answer.
+
 U1. [ ] **The dashboards and the sales report are not ours** — the owner builds them with another LLM. Offer the data contract if asked; do not build the screen.
 U2. [x] **The expenses row must add up** — closed 2026-11-21: the month screen was rebuilt with KPI cards, so `Retained cash = Net rev − Total logged` and the returns term is named in the footer. The audit's example was **test data**: the 3.750,00 return it cited was created to exercise the returns flow on 2026-11-20 and deleted after, so `sale_refunds` and `adjustments` are both 0 today. One caveat: the `(−X ret.)` suffix only renders when a month has a return, so it has never been seen against the live base.
 U3. [x] **Sales details** — closed 2026-11-21: a footer total of the filtered set (voided lines excluded), a real Status (Paid / Partial / Unpaid / Refunded / Voided, derived from `sale_money`), and every row opens `/sales/<id>`, a new sale page with its lines, plan, receipts and returns.

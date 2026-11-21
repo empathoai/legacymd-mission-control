@@ -5,15 +5,22 @@ Answers two questions: **does a patient come back?** and **does every visit carr
 
 ## How the clinic actually sold them
 
-The package is not one 1.980,00 sale. It is **one charge per visit**, at whatever the patient
+The package is not one 1.980,00 sale. It is **one charge per session**, at whatever the patient
 paid that day. The 495 is only the most common amount, not a rule: 69 of the 186 Tirzepatide
 charges are something else.
 
-| Item | Patients | Charges | Sold | Average | Lowest | Highest |
-|---|---|---|---|---|---|---|
-| Weight Loss Packages w/ Tirzepatide | 70 | 186 | 99.531,82 | 535,12 | 82,00 | 2.982,10 |
-| Male Optimization - Timmix | 27 | 32 | 15.092,69 | 471,65 | 70,00 | 2.400,00 |
-| Weight Loss Package w/ Semaglutide | 8 | 13 | 5.138,00 | 395,23 | 250,00 | 756,00 |
+A session is a **line**, not a day: two patients bought twice in one day (Maria Miranda,
+2026-09-20, two charges of 545; Felix Blaya, 2026-09-02, 526 in two charges). So the count that
+matters for a package is charges, and the days are one fewer than the charges for those two.
+
+| Item | Patients | Charges | Visit days | Sold | Average | Lowest | Highest |
+|---|---|---|---|---|---|---|---|
+| Weight Loss Packages w/ Tirzepatide | 70 | 186 | 185 | 99.531,82 | 535,12 | 82,00 | 2.982,10 |
+| Male Optimization - Timmix | 27 | 32 | 31 | 15.092,69 | 471,65 | 70,00 | 2.400,00 |
+| Weight Loss Package w/ Semaglutide | 8 | 13 | 13 | 5.138,00 | 395,23 | 250,00 | 756,00 |
+
+The per-patient detail is in `docs/sessions-detail-2026-11-21.csv` (105 rows, gitignored
+because it carries patient names), produced by `scripts/export_sessions.py`.
 
 ## Does a patient come back? Yes.
 

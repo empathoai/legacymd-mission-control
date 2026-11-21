@@ -10,6 +10,8 @@ Punch list. One line per action, imperative, with the owner when it is not me. A
 
 ### Appointments leave the system (decided 2026-11-21)
 
+0. [x] **Sessions and zero value** (migrations `20261121240000`, `20261121250000`): `treatments.sessions_minimum` = 4 on `PCK-0016` and `PCK-0015`; `session_progress` and `session_gaps` group a program's history by name across its package and unit rows; `sale_items` refuses a price or a total of zero. Today: Tirzepatide 20 complete / 50 below the minimum, Semaglutide 8 below. The 58 incomplete cases wait for the clinic's rule.
+
 1. [ ] **Data side** — the migration in [`../docs/appointments-removal-2026-11-21.md`](../docs/appointments-removal-2026-11-21.md) section 1: drop the two tables, two views, seven functions, `sales.appointment_id`, checks C14/C15/C17; renumber `visit_number` from the sales alone; add `treatments.sessions`; add the `package_split_cases` view; add the zero-value triggers and the check that joins them.
 2. [ ] **Screens** (the owner): the agenda route, the show-up rate, the appointment picker in the sale screen, and `/api/ghl/appointments`.
 3. [ ] **`AGENTS.md`**: the line "a visit with no purchase is an appointment with `show_up`" is no longer true.

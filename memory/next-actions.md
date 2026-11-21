@@ -44,7 +44,9 @@ U7. [x] **Feedback** — closed 2026-11-21: `(app)/loading.tsx` (skeleton with a
 - [ ] **WAITING ON THE CLINIC — Monday 2026-11-23.** The owner reviews the catalog's shape with the clinic that day. Nothing on this side moves before that answer. The weight-loss check is written for that meeting: [`../docs/weight-loss-packages-check-2026-11-21.md`](../docs/weight-loss-packages-check-2026-11-21.md) — 70 Tirzepatide patients, 186 charges, 24 visits with no value, and the three questions the clinic has to answer.
 - [ ] **Decide the 26 kind disagreements** the reconciliation found, one group at a time: nine packages stored as unit treatments, one membership as a unit, ten products the sheet calls Treatment, three services the sheet calls Treatment, three treatments the sheet calls Product. A kind is never rewritten to fix a past sale; the answer is either leave it or a new row of the right kind with the old one retired. Detail in [`../docs/catalog-reconciliation-2026-11-21.md`](../docs/catalog-reconciliation-2026-11-21.md) section 4.
 - [ ] **Tirzepatide is the last package**: `PCK-0016` is active with 186 lines, and it is a package in name and in the sheet, so it stays. Nothing to decide here unless the clinic sells sessions one by one for it too.
-- [ ] Restate the historical cost of the package lines (186 Tirzepatide, 32 Timmix, 13 Semaglutide) or accept them understated; it is one `set_item_cost` with a past date.
+- [ ] **Sessions**: only from the current month forward. `session_progress` and `session_gaps` report what happened; the 58 patients below the minimum in the imported past are information, not a queue.
+- [x] ~~Restate the historical cost of the package lines~~ — decided 2026-11-21: the past stays as it is. No restatement.
+- [ ] **What the current month must guarantee**: every visit that happens is recorded as a sale, no line at zero, no receipt at zero, and a program's sessions counted as they happen. This is the only month-level target from here.
 
 ### Owner data (not blockers)
 

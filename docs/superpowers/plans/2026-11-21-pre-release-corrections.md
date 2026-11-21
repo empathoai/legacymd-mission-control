@@ -173,6 +173,8 @@ select 'return', id::text, refunded_on::text from public.sale_refunds where refu
 
 ### Task 4: `set_item_price` never moves the catalog backwards
 
+**Status: done 2026-11-21.** A backdated call keeps the catalog at the open interval's price (probe: catalog 357.00, `price_on` 357.00); a call dated today still moves both (999.00 / 999.00). The history change remains, so a past margin still corrects.
+
 **Files:**
 - Create: `supabase/migrations/20261122120000_set_item_price_guard.sql`
 - Modify: `public.set_item_price(text, uuid, numeric, timestamptz, text)`

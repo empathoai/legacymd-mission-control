@@ -32,17 +32,23 @@ Yesterday: a visit was a day with a sale, and a visit with no purchase was an ap
 From now on: **a visit is a day with a sale.** A day with no sale is not a record. The ordinal
 `visit_number` is derived from the sales alone, 1 being the first.
 
-That exposes a real hole. Eleven patients have ordinals that skip a number or start above 1 —
-`Luis Gonzalez` (one sale, visit 2) and `Sandra Rodriguez` (sales at visits 2 and 3) are the
-clearest. The skip was explained by an imported appointment on the missing day. With
-appointments gone, the explanation is gone, and the ordinal is wrong. The fix is to renumber
-every patient from the sales: `visit_number` is derived data, not money, and a migration can
-rewrite it. The historical rule "a visit without purchase is an appointment" is dead and must
-leave `AGENTS.md` with the module.
+That exposes a real hole, and the decision is to leave it alone. **Thirteen patients** have
+ordinals that skip a number or start above 1 — `Luis Gonzalez` (one sale, visit 2) and
+`Sandra Rodriguez` (sales at visits 2 and 3) are the clearest. Twelve of the thirteen skips
+match a no-purchase day exactly; the thirteenth (`Patrice Bourgier`) has a no-purchase visit
+*after* her last sale, where no row exists to hold the ordinal.
 
-The 51 appointments and the 24 show-up days of the weight-loss patients become history with no
-reader. If those visits consumed a prepaid session, the session has to be reconstructed from
-the sales and the package, not from the appointment.
+The first version of this document said "renumber every patient from the sales". That is
+wrong, and the council of 2026-11-21 killed it: `is_first_visit` is tied to `visit_number = 1`
+by constraint, it is hashed in `docs/data/baseline.json`, and the owner froze the imported
+history. Renumbering would move the new-patient KPI and fail the baseline. The migration
+`20261121260000` instead redefines the column: `visit_number` is the **purchase ordinal**, and
+the inherited gaps stay as a documented limit.
+
+The 51 appointments are frozen in `docs/data/appointments-2026-11-21.json` (ids and dates,
+never a name) before anything is dropped. The 24 show-up days of the weight-loss patients
+remain a question of money, not of ordinal: if those visits consumed a prepaid session, the
+session has to be reconstructed from the sales and the package.
 
 ## 3. Zero-value validations
 

@@ -11,6 +11,7 @@ Punch list. One line per action, imperative, with the owner when it is not me. A
 ### Appointments leave the system (decided 2026-11-21)
 
 0. [x] **Sessions and zero value** (migrations `20261121240000`, `20261121250000`): `treatments.sessions_minimum` = 4 on `PCK-0016` and `PCK-0015`; `session_progress` and `session_gaps` group a program's history by name across its package and unit rows; `sale_items` refuses a price or a total of zero. Today: Tirzepatide 20 complete / 50 below the minimum, Semaglutide 8 below. The 58 incomplete cases wait for the clinic's rule.
+0b. [x] **The ordinal question is settled** (council of 2026-11-21, migration `20261121260000`): `visit_number` is the purchase ordinal, the 13 inherited gaps stay, no `visits` table, `create_sale` untouched. The 51 appointments are frozen in `docs/data/appointments-2026-11-21.json`; `AGENTS.md`, the column comment and the removal doc all say the same thing now.
 
 1. [ ] **Data side** — the migration in [`../docs/appointments-removal-2026-11-21.md`](../docs/appointments-removal-2026-11-21.md) section 1: drop the two tables, two views, seven functions, `sales.appointment_id`, checks C14/C15/C17; renumber `visit_number` from the sales alone; add `treatments.sessions`; add the `package_split_cases` view; add the zero-value triggers and the check that joins them.
 2. [ ] **Screens** (the owner): the agenda route, the show-up rate, the appointment picker in the sale screen, and `/api/ghl/appointments`.

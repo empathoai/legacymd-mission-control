@@ -34,7 +34,8 @@ U7. [x] **Feedback** — closed 2026-11-21: `(app)/loading.tsx` (skeleton with a
 
 - [ ] **WAITING ON THE CLINIC — Monday 2026-11-23.** The owner reviews the catalog's shape with the clinic that day. Nothing on this side moves before that answer.
 - [ ] **Decide the 26 kind disagreements** the reconciliation found, one group at a time: nine packages stored as unit treatments, one membership as a unit, ten products the sheet calls Treatment, three services the sheet calls Treatment, three treatments the sheet calls Product. A kind is never rewritten to fix a past sale; the answer is either leave it or a new row of the right kind with the old one retired. Detail in [`../docs/catalog-reconciliation-2026-11-21.md`](../docs/catalog-reconciliation-2026-11-21.md) section 4.
-- [ ] **One shape for the two remaining package pairs**: `PCK-0017` Timmix is active with 0 lines while `TRT-0012` holds 32; `TRT-0037` Semaglutide is active with 13 lines while `PCK-0015` holds 0. Price and cost are identical inside each pair, so only the sale screen's quantity lock differs. Regenerative Glow was settled on 2026-11-21: the package is live and the unit retired.
+- [ ] **Tirzepatide is the last package**: `PCK-0016` is active with 186 lines. Timmix and Semaglutide are units now and Regenerative Glow is a package, so this one is the only pair left unasked — if the clinic sells sessions rather than bundles, say so.
+- [ ] **`TRT-0037` is a unit named "Weight Loss Package w/ Semaglutide"**: the word stays from the package row it replaced. The owner's sheet calls it that, so it is not renamed without a word.
 - [ ] Restate the historical cost of the package lines (186 Tirzepatide, 32 Timmix, 13 Semaglutide) or accept them understated; it is one `set_item_cost` with a past date.
 
 ### Owner data (not blockers)

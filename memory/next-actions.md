@@ -15,7 +15,7 @@ Punch list. One line per action, imperative, with the owner when it is not me. A
 3. [x] **Task 3 — date guards**: four triggers refuse a future or out-of-order date on `sales`, `sale_payments`, `payment_receipts` and `sale_refunds` (`20261122110000`, `20261122115000`); `settle_return` gains `p_by` and the column `settled_by`; the caller passes the actor. Check C22 + control; 22 checks / 21 controls.
 4. [x] **Task 4 — `set_item_price`**: the catalog column only moves when the interval being set is the newest (`20261122120000`). Probes: retroactive keeps 357.00, today sets 999.00.
 5. [x] **Task 5 — `cost_on(date)`**: resolves the clinic midnight (`20261122130000`). C23 covers the 134 midnight intervals, its control fires on 53, and gross margin stays 74.873,66.
-6. [ ] **Task 6 — the suite keeps its promises**: the missing C16 control and the C11 control whose RLS branch can never fire.
+6. [x] **Task 6 — the suite keeps its promises**: `C16` removed (it could never fire), the `C11` control now disables `ensure_rls` so its RLS branch fires (2 rows). 22 checks, 22 controls, all green.
 7. [ ] **Task 7 — pin the build**: `engines.node >= 22`, `packageManager`, `shadcn` out of `dependencies`; `pnpm audit --prod` at 0.
 8. [ ] **Task 8 — the record matches the code**: `AGENTS.md` migration count and the removed appointments route, `HANDOFF.md` numbers, the "no remote" line.
 

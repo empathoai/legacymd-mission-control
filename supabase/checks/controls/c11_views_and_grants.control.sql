@@ -1,6 +1,9 @@
 -- Control for C11: a grant for anon and a table without RLS must both be reported.
--- Rolls back.
+-- `ensure_rls` turns RLS on at CREATE TABLE, so the control disables it inside this
+-- transaction; otherwise the RLS branch of the check is never exercised. Rolls back.
 begin;
+
+alter event trigger ensure_rls disable;
 
 grant select on public.customers to anon;
 create table public.control_no_rls (id int);

@@ -220,6 +220,8 @@ Expected today: **56 rows** — the intervals that start at New York midnight re
 
 ### Task 6: The suite keeps its own promises
 
+**Status: done 2026-11-21.** `C16` was removed: `customer_balances` only emits a row for a customer with a money fact, so the check could never return a row and no control could make it fire. The `C11` control now disables the `ensure_rls` event trigger inside its transaction, so the RLS branch is exercised — it fires on **2 rows** instead of 1. The suite is **22 checks and 22 controls**, every check with one.
+
 **Files:**
 - Create: `supabase/checks/c16_balance_rows_have_money.control.sql`
 - Modify: `supabase/checks/controls/c11_views_and_grants.control.sql`

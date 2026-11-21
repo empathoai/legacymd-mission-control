@@ -42,8 +42,7 @@ Verified in rollback, still open, in priority order:
    so 56 of 59 cost intervals answer the previous cost or null.
 4. **`create_sale` accepts an active item with no price** (`TRT-0027`) and a free-text line after
    the cutover; C05 reports them afterwards. The sale screen filters them; the function does not.
-5. **C16 has no control**, and the C11 control cannot fire its RLS branch because the
-   `ensure_rls` event trigger enables RLS at `CREATE TABLE`.
+5. ~~**C16 has no control**, and the C11 control cannot fire its RLS branch~~ **Closed 2026-11-21**: C16 was a check that could never fail (`customer_balances` only emits a row for a customer with a money fact) and was removed; the C11 control now disables the `ensure_rls` event trigger inside its transaction and fires on 2 rows. 22 checks, 22 controls.
 
 ## 3. Build and dependencies — verified results
 

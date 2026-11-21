@@ -139,6 +139,8 @@ git commit -m "A cancelled installment writes off what it stops expecting"
 
 ### Task 3: No date can be in the future, and a return says who settled it
 
+**Status: done 2026-11-21.** Four triggers (`sales_dates`, `sale_payments_dates`, `payment_receipts_dates`, `sale_refunds_dates`) plus `settle_return(…, p_by)` and a `settled_by` column. Probes: a 2099 sale, receipt and return are each refused, and settling without an actor is refused. C22 with its control; the suite is 22 checks / 21 controls, baseline 435.
+
 **Files:**
 - Create: `supabase/migrations/20261122110000_date_guards.sql`
 - Create: `supabase/checks/c22_no_future_dates.sql` (+ control)

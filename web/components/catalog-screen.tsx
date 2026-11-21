@@ -123,11 +123,11 @@ export function CatalogScreen({
                   <TableCell className="hidden font-mono text-xs sm:table-cell">
                     {row.code}
                   </TableCell>
-                  <TableCell className="font-medium">
+                  <TableCell className="min-w-0 overflow-hidden font-medium">
                     <span className="block truncate" title={row.name}>
                       {row.name}
                     </span>
-                    <span className="mt-0.5 block text-xs text-muted-foreground sm:hidden">
+                    <span className="mt-0.5 block truncate text-xs text-muted-foreground sm:hidden">
                       {amount(row.cost)} cost
                       {margin === null
                         ? ""

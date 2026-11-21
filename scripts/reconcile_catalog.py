@@ -55,15 +55,15 @@ def query(sql):
 
 CATALOG_SQL = """
 select 'treatment' as kind, code, name, unit_type, price,
-       cost_on('treatment', id, current_date) as cost, duration_months
+       cost_on('treatment', id, current_date) as cost
 from public.treatments where active
 union all
 select 'product', code, name, null, price,
-       cost_on('product', id, current_date), null
+       cost_on('product', id, current_date)
 from public.products where active
 union all
 select 'service', code, name, null, price,
-       cost_on('service', id, current_date), null
+       cost_on('service', id, current_date)
 from public.services where active
 """
 

@@ -6,9 +6,7 @@ import { CheckCircle2, Plus, Search, X } from "lucide-react"
 
 import {
   createSale,
-  listBookedAppointments,
   searchSaleCustomers,
-  type BookedAppointment,
   type SaleCustomerMatch,
 } from "@/app/(app)/sales/actions"
 import { createCustomer } from "@/app/(app)/patients/actions"
@@ -151,8 +149,6 @@ export function SaleForm({
   const [newPhone, setNewPhone] = useState("")
   const [occurredOn, setOccurredOn] = useState(clinicToday())
   const [sourceId, setSourceId] = useState("")
-  const [appointments, setAppointments] = useState<BookedAppointment[]>([])
-  const [appointmentId, setAppointmentId] = useState("")
   const [itemQuery, setItemQuery] = useState("")
   const [itemHighlight, setItemHighlight] = useState(0)
   const [lines, setLines] = useState<Line[]>([])
@@ -282,24 +278,6 @@ export function SaleForm({
     }
   }, [patientQuery])
 
-  useEffect(() => {
-    if (!customer) {
-      setAppointments([])
-      setAppointmentId("")
-      return
-    }
-    let active = true
-    listBookedAppointments(customer.id).then((list) => {
-      if (active) {
-        setAppointments(list)
-        setAppointmentId("")
-      }
-    })
-    return () => {
-      active = false
-    }
-  }, [customer])
-
   const firstVisit = customer?.visits === 0
 
   const lineTotal = (line: Line) =>
@@ -342,8 +320,6 @@ export function SaleForm({
   function clearCustomer() {
     setCustomer(null)
     setSourceId("")
-    setAppointments([])
-    setAppointmentId("")
   }
 
   function addItem(item: SellableItem) {
@@ -374,7 +350,7 @@ export function SaleForm({
         name: "",
         unitType: null,
         quantity: "1",
-        unitPrice: "0",
+        unitPrice: "",
       },
     ])
   }
@@ -468,8 +444,6 @@ export function SaleForm({
     setNewName("")
     setNewPhone("")
     setSourceId("")
-    setAppointments([])
-    setAppointmentId("")
     setItemQuery("")
     setLines([])
     setPaymentMode("full")
@@ -531,8 +505,8 @@ export function SaleForm({
         setError("Every line needs a quantity above zero.")
         return
       }
-      if (!Number.isFinite(price) || price < 0) {
-        setError("Every line needs a price of zero or more.")
+      if (!Number.isFinite(price) || price <= 0 || r2(quantity * price) <= 0) {
+        setError("Every line must have a unit price and total greater than $0.00.")
         return
       }
     }
@@ -587,7 +561,7 @@ export function SaleForm({
         customerId: customer.id,
         occurredOn,
         sourceId: firstVisit ? sourceId : null,
-        appointmentId: appointmentId || null,
+        appointmentId: null,
         notes: notes.trim() || null,
         lines: lines.map((line) => ({
           kind: line.kind,
@@ -759,41 +733,6 @@ export function SaleForm({
           <div className="flex flex-col gap-2">
             <Label htmlFor="sale-source">How did they find the clinic?</Label>
             <SourcePicker sources={sources} value={sourceId} onChange={setSourceId} />
-          </div>
-        ) : null}
-
-        {customer && appointments.length > 0 ? (
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="sale-appointment">Appointment (optional)</Label>
-            <Select
-              items={[
-                { label: "Walk-in (no appointment)", value: "walk-in" },
-                ...appointments.map((appointment) => ({
-                  label: shortDay(appointment.scheduledOn),
-                  value: appointment.id,
-                })),
-              ]}
-              value={appointmentId || "walk-in"}
-              onValueChange={(next) =>
-                setAppointmentId(
-                  (next as string | null) === "walk-in"
-                    ? ""
-                    : ((next as string | null) ?? "")
-                )
-              }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent alignItemWithTrigger={false}>
-                <SelectItem value="walk-in">Walk-in (no appointment)</SelectItem>
-                {appointments.map((appointment) => (
-                  <SelectItem key={appointment.id} value={appointment.id}>
-                    {shortDay(appointment.scheduledOn)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
         ) : null}
       </section>

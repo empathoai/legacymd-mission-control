@@ -43,6 +43,23 @@ export async function createSale(
   if (!input.customerId) return { ok: false, error: "A patient is required." }
   if (!input.occurredOn) return { ok: false, error: "A date is required." }
   if (input.lines.length === 0) return { ok: false, error: "Add at least one line." }
+  for (const line of input.lines) {
+    if (!(line.quantity > 0)) {
+      return { ok: false, error: "Every line needs a quantity above zero." }
+    }
+    if (!Number.isFinite(line.unitPrice) || line.unitPrice <= 0) {
+      return {
+        ok: false,
+        error: "Every line must have a unit price and total greater than $0.00.",
+      }
+    }
+    if (line.quantity * line.unitPrice <= 0) {
+      return {
+        ok: false,
+        error: "Every line must have a unit price and total greater than $0.00.",
+      }
+    }
+  }
   if (input.payments.length === 0) {
     return { ok: false, error: "Add at least one payment." }
   }
@@ -107,32 +124,5 @@ export async function searchSaleCustomers(
     visits: row.visits,
     balance: row.balance,
     lastVisitOn: row.lastVisitOn,
-  }))
-}
-
-export type BookedAppointment = {
-  id: string
-  scheduledOn: string
-  scheduledAt: string
-}
-
-export async function listBookedAppointments(
-  customerId: string
-): Promise<BookedAppointment[]> {
-  if (!customerId) return []
-
-  const { data, error } = await supabase
-    .from("appointments")
-    .select("id, scheduled_on, scheduled_at")
-    .eq("customer_id", customerId)
-    .eq("status", "booked")
-    .order("scheduled_at")
-
-  if (error) return []
-
-  return (data ?? []).map((row) => ({
-    id: row.id as string,
-    scheduledOn: row.scheduled_on as string,
-    scheduledAt: row.scheduled_at as string,
   }))
 }

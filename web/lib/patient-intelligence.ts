@@ -136,7 +136,7 @@ function suggestComplementaryPillar(onlyCategorySlug: string | null): string {
 export async function getPatientIntelligence(): Promise<PatientIntelligenceData> {
   const today = clinicToday()
 
-  const [overviewRes, salesRes, itemsRes, catsRes, sourcesRes, apptsRes] =
+  const [overviewRes, salesRes, itemsRes, catsRes, sourcesRes] =
     await Promise.all([
       supabase
         .from("customers_overview")
@@ -155,11 +155,6 @@ export async function getPatientIntelligence(): Promise<PatientIntelligenceData>
         .is("sales.voided_at", null),
       supabase.from("categories").select("id, slug, label"),
       supabase.from("sources").select("id, label"),
-      supabase
-        .from("appointments")
-        .select("customer_id, scheduled_on")
-        .eq("status", "booked")
-        .gte("scheduled_on", today),
     ])
 
   const catMap = new Map(
@@ -171,11 +166,6 @@ export async function getPatientIntelligence(): Promise<PatientIntelligenceData>
   const sourceMap = new Map(
     (sourcesRes.data ?? []).map((s) => [s.id as string, s.label as string])
   )
-
-  const upcomingBookedIds = new Set<string>()
-  for (const a of apptsRes.data ?? []) {
-    if (a.customer_id) upcomingBookedIds.add(a.customer_id as string)
-  }
 
   // First-visit source per customer
   const firstSourceByCustomer = new Map<string, string>()
@@ -270,7 +260,6 @@ export async function getPatientIntelligence(): Promise<PatientIntelligenceData>
     const visits = num(p.visits)
     const lastVisitOn = (p.last_visit_on as string | null) ?? null
     const isOverdue = Boolean(p.is_overdue)
-    const hasBooked = upcomingBookedIds.has(id)
 
     totalCash += spentTotal
     if (visits >= 2) repeatPatients += 1
@@ -306,8 +295,7 @@ export async function getPatientIntelligence(): Promise<PatientIntelligenceData>
       const atRisk =
         (tier === "platinum" || tier === "gold") &&
         daysSince !== null &&
-        daysSince >= 60 &&
-        !hasBooked
+        daysSince >= 60
 
       vips.push({
         id,
@@ -326,8 +314,8 @@ export async function getPatientIntelligence(): Promise<PatientIntelligenceData>
       })
     }
 
-    // Outreach queues auto-suppress overdue and already-booked patients
-    if (!isOverdue && !hasBooked) {
+    // Outreach queues auto-suppress overdue accounts
+    if (!isOverdue) {
       // 1. Recall 60-120d
       if (
         visits >= 1 &&

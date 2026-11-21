@@ -140,10 +140,16 @@ export type CustomerSale = {
   items: CustomerSaleItem[]
 }
 
-export type CustomerAppointment = {
-  id: string
-  scheduledOn: string
-  status: string
+export type CustomerSessionProgress = {
+  itemCode: string
+  itemName: string
+  sessionsMinimum: number
+  sessionsTaken: number
+  paid: number
+  valuePerSession: number
+  firstOn: string
+  lastOn: string
+  state: "complete" | "incomplete"
 }
 
 export type CustomerDetail = {
@@ -162,7 +168,7 @@ export type CustomerDetail = {
   isOverdue: boolean
   isSettled: boolean
   sales: CustomerSale[]
-  appointments: CustomerAppointment[]
+  sessionProgress: CustomerSessionProgress[]
 }
 
 type IdRow = { id: string }
@@ -258,12 +264,13 @@ export async function getCustomerDetail(id: string): Promise<CustomerDetail | nu
     itemsBySale.set(saleId, list)
   }
 
-  const { data: appointmentRows } = await supabase
-    .from("appointments")
-    .select("id, scheduled_on, status")
+  const { data: progressRows } = await supabase
+    .from("session_progress")
+    .select(
+      "item_code, item_name, sessions_minimum, sessions_taken, paid, value_per_session, first_on, last_on, state"
+    )
     .eq("customer_id", id)
-    .order("scheduled_on", { ascending: false })
-    .limit(20)
+    .order("last_on", { ascending: false })
 
   return {
     id: overview.id as string,
@@ -292,10 +299,16 @@ export async function getCustomerDetail(id: string): Promise<CustomerDetail | nu
         items: itemsBySale.get(id) ?? [],
       }
     }),
-    appointments: (appointmentRows ?? []).map((row) => ({
-      id: row.id as string,
-      scheduledOn: row.scheduled_on as string,
-      status: row.status as string,
+    sessionProgress: (progressRows ?? []).map((row) => ({
+      itemCode: (row.item_code as string) ?? "",
+      itemName: (row.item_name as string) ?? "",
+      sessionsMinimum: Number(row.sessions_minimum ?? 0),
+      sessionsTaken: Number(row.sessions_taken ?? 0),
+      paid: Number(row.paid ?? 0),
+      valuePerSession: Number(row.value_per_session ?? 0),
+      firstOn: (row.first_on as string) ?? "",
+      lastOn: (row.last_on as string) ?? "",
+      state: row.state === "complete" ? "complete" : "incomplete",
     })),
   }
 }

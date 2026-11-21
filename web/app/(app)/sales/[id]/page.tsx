@@ -77,7 +77,7 @@ export default async function Page({
             </h1>
             <p className="text-sm text-muted-foreground">
               Sale of {formatClinicDay(sale.occurredOn)}
-              {sale.visitNumber ? ` · visit ${sale.visitNumber}` : ""}
+              {sale.visitNumber ? ` · purchase ${sale.visitNumber}` : ""}
             </p>
           </div>
           <div className="flex items-center gap-2">

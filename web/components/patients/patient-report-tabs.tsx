@@ -1040,7 +1040,7 @@ export function PatientReportTabs({
 
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
             <span>
-              Auto-suppresses overdue accounts and patients with upcoming booked visits.
+              Auto-suppresses overdue accounts (handled in Open items).
             </span>
             {activeOutreachTotal > WEEKLY_BATCH_SIZE ? (
               <Button

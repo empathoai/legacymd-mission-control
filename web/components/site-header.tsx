@@ -18,7 +18,6 @@ const titles: Record<string, string> = {
   "/sales/voids": "Voids",
   "/open-items": "Open items",
   "/sales/report": "Sales report",
-  "/appointments": "Appointments",
   "/patients/new": "New patient",
   "/patients/report": "Patients",
   "/expenses": "Expenses",

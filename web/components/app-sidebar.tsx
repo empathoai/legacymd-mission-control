@@ -6,7 +6,6 @@ import {
   Ban,
   BarChart3,
   CalendarClock,
-  CalendarDays,
   LayoutDashboard,
   LogOut,
   Package,
@@ -41,7 +40,6 @@ const groups = [
   {
     label: "Clinic",
     items: [
-      { title: "Appointments", href: "/appointments", icon: CalendarDays },
       { title: "Patients", href: "/patients/report", icon: Users },
       { title: "New patient", href: "/patients/new", icon: UserPlus },
     ],

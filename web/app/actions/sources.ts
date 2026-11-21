@@ -76,7 +76,6 @@ export async function createSource(label: string): Promise<CreateSourceResult> {
   }
 
   revalidatePath("/sales/new")
-  revalidatePath("/appointments")
 
   return { ok: true, source: { id: data.id as string, label: data.label as string } }
 }

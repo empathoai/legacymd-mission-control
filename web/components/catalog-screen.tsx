@@ -140,6 +140,12 @@ export function CatalogScreen({
                   <TableCell className="text-right tabular-nums">
                     <div className="flex flex-col items-end gap-0.5">
                       <span>{amount(row.price)}</span>
+                      {row.sessionsMinimum !== null ? (
+                        <span className="text-xs text-muted-foreground">
+                          minimum {row.sessionsMinimum} session
+                          {row.sessionsMinimum === 1 ? "" : "s"}
+                        </span>
+                      ) : null}
                       {row.nextPrice !== null && row.nextPriceFrom ? (
                         <span className="text-xs text-muted-foreground">
                           {amount(row.nextPrice)} from {shortDate(row.nextPriceFrom)}

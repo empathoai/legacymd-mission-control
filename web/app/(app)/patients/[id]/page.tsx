@@ -44,13 +44,6 @@ function formatMonth(value: string) {
   )
 }
 
-const statusLabel: Record<string, string> = {
-  booked: "Booked",
-  show_up: "Show up",
-  no_show: "No show",
-  cancelled: "Cancelled",
-}
-
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <Card size="sm">
@@ -206,25 +199,44 @@ export default async function Page({
         </div>
       </section>
 
-      {patient.appointments.length > 0 ? (
+      {patient.sessionProgress.length > 0 ? (
         <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-medium">Appointments</h2>
+          <h2 className="text-lg font-medium">Program sessions</h2>
           <div className="overflow-hidden rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
+                  <TableHead>Program</TableHead>
+                  <TableHead className="text-right">Sessions</TableHead>
+                  <TableHead className="text-right">Paid</TableHead>
+                  <TableHead className="text-right">Value / session</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {patient.appointments.map((appointment) => (
-                  <TableRow key={appointment.id}>
-                    <TableCell className="whitespace-nowrap">
-                      {formatDay(appointment.scheduledOn)}
+                {patient.sessionProgress.map((prog) => (
+                  <TableRow key={prog.itemCode || prog.itemName}>
+                    <TableCell className="font-medium">
+                      <div>{prog.itemName}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {formatDay(prog.firstOn)} – {formatDay(prog.lastOn)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs tabular-nums">
+                      {prog.sessionsTaken} / {prog.sessionsMinimum} min
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs tabular-nums">
+                      {money.format(prog.paid)}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs text-muted-foreground tabular-nums">
+                      {money.format(prog.valuePerSession)}
                     </TableCell>
                     <TableCell>
-                      {statusLabel[appointment.status] ?? appointment.status}
+                      {prog.state === "complete" ? (
+                        <Badge variant="positive">Complete</Badge>
+                      ) : (
+                        <Badge variant="gold">Incomplete</Badge>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

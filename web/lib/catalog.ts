@@ -18,6 +18,7 @@ export type CatalogRow = {
   active: boolean
   nextPrice: number | null
   nextPriceFrom: string | null
+  sessionsMinimum: number | null
 }
 
 export async function listCatalog(
@@ -42,10 +43,28 @@ export async function listCatalog(
     request = request.eq("item_kind", "service")
   }
 
-  const { data, error } = await request.order("code")
+  const isTreatmentKind =
+    kind === "treatments" || kind === "packages" || kind === "memberships"
+
+  const [{ data, error }, minsRes] = await Promise.all([
+    request.order("code"),
+    isTreatmentKind
+      ? supabase
+          .from("treatments")
+          .select("id, sessions_minimum")
+          .not("sessions_minimum", "is", null)
+      : Promise.resolve({ data: [] as { id: string; sessions_minimum: number | null }[], error: null }),
+  ])
 
   if (error) {
     throw new Error(`catalog query failed: ${error.message}`)
+  }
+
+  const minsById = new Map<string, number>()
+  for (const m of minsRes.data ?? []) {
+    if (m.sessions_minimum != null) {
+      minsById.set(m.id as string, Number(m.sessions_minimum))
+    }
   }
 
   const rows = (data ?? []).map((row) => ({
@@ -57,6 +76,7 @@ export async function listCatalog(
     active: row.active as boolean,
     nextPrice: row.next_price as number | null,
     nextPriceFrom: row.next_price_from as string | null,
+    sessionsMinimum: minsById.get(row.item_id as string) ?? null,
   }))
 
   const term = query?.trim().toLowerCase()

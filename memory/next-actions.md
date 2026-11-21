@@ -8,16 +8,18 @@ Punch list. One line per action, imperative, with the owner when it is not me. A
 
 ## Next
 
-### Pre-release review (2026-11-21) — blockers before publishing
+### Pre-release corrections — plan: [`../docs/superpowers/plans/2026-11-21-pre-release-corrections.md`](../docs/superpowers/plans/2026-11-21-pre-release-corrections.md)
 
-1. [ ] **Publishable key missing** (`web/.env.local`): the auth client and `proxy.ts` fall back to `SUPABASE_SECRET_KEY`, so the login runs with the master key. The value already exists in the root `.env.local`.
-2. [ ] **Mobile drawer does not close** (H1): navigating leaves it open over the new screen; the Close button is 0×0 and Escape does nothing. Owner's UI.
-3. [ ] **`/expenses/<period>` at 390 is 680 px wide** (H2): the filter strip does not wrap. Owner's UI.
-4. [ ] **Returns and Voids lose their action column at 390** (H3): `table-fixed` gives the last column 0 px. Owner's UI.
-5. [ ] **`void_payment` breaks C01**: cancelling an installment writes no write-off, so `planned − write_off` stops matching `sold` and the balance keeps charging a forgiven cuota. Needs the owner's rule (D5 says the default is to forgive) before the function creates the adjustment.
-6. [ ] **Date guards missing** in `create_sale`, `record_receipt`, `register_return` and `settle_return`: 2099 is accepted and lands in a future month. `settle_return` also takes no `p_by`.
-7. [ ] **`set_item_price` retroactive** desyncs the catalog column from the open interval (the state C20 exists to catch); **`cost_on(date)`** resolves the day in UTC, so 56 of 59 intervals give the previous cost or null.
-8. [ ] **`C16` has no control**, and the `C11` control's RLS branch can never fire because the `ensure_rls` event trigger turns RLS on at CREATE TABLE.
+1. [ ] **Task 1 — publishable key**: `SUPABASE_PUBLISHABLE_KEY` in `web/.env.local`, so the auth client stops falling back to the secret. Probe written first.
+2. [ ] **Task 2 — a cancelled installment writes off what it stops expecting**: `void_payment` creates the adjustment, check C21 + control; C01 must stay green.
+3. [ ] **Task 3 — date guards**: no future `occurred_on`/`received_on`/`refunded_on`, `billed_at >= occurred_on`, `settle_return` gains `p_by`. Check C22 + control.
+4. [ ] **Task 4 — `set_item_price` never moves the catalog backwards** when a later interval exists.
+5. [ ] **Task 5 — `cost_on(date)` at clinic midnight**: 56 of 137 intervals answer the wrong cost today; check C23.
+6. [ ] **Task 6 — the suite keeps its promises**: the missing C16 control and the C11 control whose RLS branch can never fire.
+7. [ ] **Task 7 — pin the build**: `engines.node >= 22`, `packageManager`, `shadcn` out of `dependencies`; `pnpm audit --prod` at 0.
+8. [ ] **Task 8 — the record matches the code**: `AGENTS.md` migration count and the removed appointments route, `HANDOFF.md` numbers, the "no remote" line.
+
+**Not in the plan, the owner's:** the mobile drawer that never closes, `/expenses/<period>` at 680 px, Returns/Voids losing their action column, catalog names at 84 px, KPI truncation, and the five lint errors inside components.
 
 ### Appointments leave the system (decided 2026-11-21)
 

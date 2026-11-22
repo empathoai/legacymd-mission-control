@@ -4,6 +4,8 @@ One line per decision: `Date · what · why`. Newest first. Long-form reasoning 
 
 ## Log
 
+- 2026-11-21 — **The app stays on the temporary Hostinger hostname, and nothing may index it.** The owner asked whether leaving it there is a problem; it is not, with one gap closed: no header stopped a crawler, so the login page could be found and the clinic's name would sit on a random subdomain. `X-Robots-Tag: noindex, nofollow, noarchive` now ships on every response, and it stays after a custom domain arrives. The cost of moving later is one Supabase Auth *Site URL* field plus signing in again — the code holds no site URL, only the Supabase URL and key, and the session cookie is per host. Nothing else in the deploy depends on the name.
+
 - 2026-11-21 — **The owner asked this session to redesign the login screen**, so it did: a brand panel in the clinic's navy and gold beside the form, a real `h1`, 44 px fields and a full-width button, on desktop and phone. The UI boundary stands for routine work — screens stay the owner's with the other agent — but a direct request from the owner wins over the split, and this was one.
 
 - 2026-11-21 — **No Stripe extract.** The card channel is 58.002,12 of 219.460,91 (26%), and reconciling it would need a per-charge CSV plus an amount+date match that Stripe cannot disambiguate without a patient name. The owner's call: the monthly hand reconciliation stays, and the extract is not requested. Do not re-propose it without a reason that moves money.

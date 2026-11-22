@@ -1,5 +1,10 @@
 # SDD — Appointments and customer master
 
+> **Superseded, 2026-11-21.** Appointments left the system: the clinic keeps its diary outside
+> and the tool records patients and sales only. This document is history — the design that was
+> built and then retired. Do not implement from it. What replaced it is in
+> [`appointments-removal-2026-11-21.md`](appointments-removal-2026-11-21.md).
+
 * **Source:** [concepts_brief-appointments.md](concepts_brief-appointments.md)
 * **Status:** implemented (migrations `100200`–`100400`, checks C14–C17)
 * **Date:** 2026-11-19

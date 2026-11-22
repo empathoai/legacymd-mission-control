@@ -12,7 +12,7 @@ Read this first when resuming. Then `AGENTS.md` and `memory/current-strategy.md`
 |---|---|
 | Supabase project | `konjxlatjymqrzebvtdu` (`https://konjxlatjymqrzebvtdu.supabase.co`), Postgres 17, us-east-2 |
 | Credentials | `.env.local` (gitignored): publishable key, secret key, `SUPABASE_ACCESS_TOKEN`, test user |
-| Schema | `supabase/migrations/*.sql` (101 files, applied in filename order) |
+| Schema | `supabase/migrations/*.sql` (119 files, applied in filename order) |
 | Query helper | `scripts/query.py "SELECT ..."` or `scripts/query.py @file.sql` |
 | Apply migrations | `scripts/apply_migrations.py` (applies only what is not in `public.schema_migrations`, stops on the first error, then re-applies the lock-down file) |
 | Import generators | removed with the import: the base is loaded, the source exports live outside the repo (`F:\EmpathoAI-projects\_legacymd-datos-fuente`) |
@@ -31,16 +31,18 @@ Python with openpyxl: `C:\Users\aguaj\.dsh\dsh-runtimes\dsh-primary-runtime\depe
 | Receipts | 435, sum equals revenue |
 | Returns | 0 |
 | Revenue | **219.460,91** (consolidated import, 2026-11-20) |
-| Gross margin, May–November | **74.964,06** after the 20 product costs were set from the owner's sheet (was 71.663,96) |
+| Gross margin, May–November | **74.873,66** after the 20 product costs were set from the owner's sheet (was 71.663,96), minus the 90,40 the four estimated products added back |
 | Balance outstanding | **0,00** |
 | November 2026 | **18.599,92** sold and collected |
 | Expenses | 7 periods (May–Oct closed, Nov open), 105 live entries + 1 voided, total **247.350,49** (equals the sheet); concepts carry `cost_behavior` and `guidance`, and the owner draw is its own concept |
-| Appointments | 51 |
+| Appointments | 51, **archive only** since 2026-11-21: nothing books, the screens are gone, the rows stay as history (frozen in `docs/data/appointments-2026-11-21.json`) |
 | `import_review` | 20 rows, all `rejected` (closed with the owner's answer), 0 pending |
-| Catalog | 93 catalog rows across treatments, packages, memberships, products and services, **66 active** (the `catalog_items` view returns all 93, inactive included) |
-| Migrations | 101, all recorded in `public.schema_migrations` |
-| Checks | 20, with their negative controls; the baseline holds at 435 historical sales |
-| Remote | **none**: `git remote -v` is empty, so nothing is pushed |
+| Catalog | 93 catalog rows across treatments, packages, memberships, products and services, **66 active** (the `catalog_items` view returns all 93, inactive included); `sessions_minimum = 4` on the two weight-loss programs |
+| Migrations | **119**, all recorded in `public.schema_migrations` |
+| Checks | **22**, each with a negative control; the baseline holds at 435 historical sales |
+| Remote | **github.com/empathoai/legacymd-mission-control**, `master`, pushed |
+| Deployment | **live** at `real-darkgray-tarsier-88.hostingersite.com` — Hostinger, Node 22, npm, `next build --webpack`, auto-deploy on every push to `master` ([deploy-hostinger.md](deploy-hostinger.md)) |
+| Security | reviewed 2026-11-21; CSP, HSTS, frame denial, httpOnly session cookie ([security-review-2026-11-21.md](security-review-2026-11-21.md)) |
 
 ## Handover — the dashboards and the sales report
 
@@ -101,10 +103,10 @@ Verified live: publishable key → `401 permission denied` on `customers` and
 
 `memory/next-actions.md` carries the ordered list; `memory/current-strategy.md` says what is *now*.
 
-1. **Built and verified:** the base, the migrations with their 19 checks and controls, the catalog (five tabs, search, margin), patients, sales details, the sale entry screen, the appointments agenda, expenses, returns, voids, open items, and the login gate with the actor read from the session.
-2. **Owned elsewhere:** the dashboards and the sales report — the owner builds them with another LLM. This side keeps the data contract and answers questions; it does not draw the screen.
-3. **Next here:** the UX backlog U2–U7 from [`ux-audit-2026-11-20.md`](ux-audit-2026-11-20.md), in its order.
-4. **Then:** the catalog's kind decisions from the reconciliation (section 4 of [`catalog-reconciliation-2026-11-21.md`](catalog-reconciliation-2026-11-21.md)), the branded PDF of the patient report, deploy to Vercel, and the Google Calendar feed once the account access exists.
+1. **Built and verified:** the base, the migrations with their 22 checks and controls, the catalog (five tabs, search, margin), patients, sales details with a footer total and a real status, the sale entry screen with a browser draft, expenses, returns, voids, open items, the session log and the login gate with the actor read from the session. **Appointments are gone**; the 51 imported rows are an archive.
+2. **Live:** the app is deployed on Hostinger from `master` (auto-deploy), behind the clinic login. [`deploy-hostinger.md`](deploy-hostinger.md) has the panel settings and the failure modes.
+3. **Owned elsewhere:** the dashboards and the sales report — the owner builds them with another LLM. This side keeps the data contract and answers questions; it does not draw the screen.
+4. **Next here:** the catalog's kind decisions from the reconciliation (section 4 of [`catalog-reconciliation-2026-11-21.md`](catalog-reconciliation-2026-11-21.md)); the six costs and eight prices the owner still owes; the branded PDF. The Google Calendar feed is no longer planned — appointments left the system.
 
 Owner data that is not a blocker: the six costs the sheet omits, the eight provisional prices, package descriptions. The base is 435 sales, 588 lines, 435 receipts, 219.460,91 collected, 0,00 owed (consolidated import, 2026-11-20).
 

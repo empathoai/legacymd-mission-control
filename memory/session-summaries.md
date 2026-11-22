@@ -2,6 +2,22 @@
 
 Dated session wrap-ups, newest first. Format: what was attempted, what got done, what stayed open.
 
+## 2026-11-21 — Deployed, secured, and the record brought up to date
+
+**Goal:** put the app in front of the clinic on a real host, close the security review, and make `AGENTS.md` and `HANDOFF.md` describe what exists.
+
+**Done:**
+- **Deployed on Hostinger** at `real-darkgray-tarsier-88.hostingersite.com` from GitHub, auto-deploy on every push to `master`: root `web`, Node 22, npm, `next build --webpack`. Turbopack crashed on `app/globals.css` on the host, so the build script pins webpack; verified from a fresh clone (`npm ci`, build, `/` 307, `/login` 200) before switching.
+- **`package-lock.json` committed** for the host's npm; `pnpm-lock.yaml` stays for local development. `engines.node >= 22`, `packageManager`, `.nvmrc`.
+- **Security review** ([`../docs/security-review-2026-11-21.md`](../docs/security-review-2026-11-21.md)): CSP, HSTS, `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, `poweredByHeader: false`, and the session cookie made `httpOnly` + `Secure`. `unsafe-eval` is allowed **only in development**, where React's dev build needs it. No secret was ever committed, verified across the whole history.
+- **The sign-in screen was redesigned** at the owner's direct request: brand panel in the clinic's navy and gold beside the form, a real `h1`, 44 px fields. Verified at 1440 and 390, locally and deployed.
+- The repository was cleaned before the first push: the 23 third-party skill bundles (235 files) are no longer tracked, `web/README.md` was rewritten, `web/.env.example` added.
+- **The record now matches the code**: `AGENTS.md` (119 migrations, 22 checks, no appointments surface, no `/api`), `HANDOFF.md` (deployment row, security row, archive note), `current-strategy.md` rewritten, `next-actions.md` reduced to what is actually open.
+
+**Open:** the clinic's Monday answers (26 kind disagreements, six costs, eight prices, the rule for the 58 incomplete session programs); one real sale from the deployed app to prove the desk; the Supabase Auth rate limits to confirm; the owner's UI backlog from the review.
+
+**State at close:** 119 migrations, 22 checks with 22 controls, 435 sales, 189 patients, 219.460,91 collected, 0,00 owed, gross margin 74.873,66, deployed and gated.
+
 ## 2026-11-21 — Pre-release review with five parallel agents
 
 **Done:**

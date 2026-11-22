@@ -1,5 +1,5 @@
 # LegacyMD Mission Control — AGENTS.md
-*Updated 2026-11-20 · the consolidated base is loaded; catalog, patients, sales details, the appointments agenda, open items, expenses, returns and voids are built, and the app is behind a login gate. The dashboards and the sales report are the owner's, built with another LLM.*
+*Updated 2026-11-21 · the consolidated base is loaded, the desk screens are built, the app is behind a login gate and **deployed on Hostinger** (`real-darkgray-tarsier-88.hostingersite.com`, auto-deploy from `master`). Appointments left the system: the tool records patients and sales only. The dashboards and the sales report are the owner's, built with another LLM.*
 
 ## The project
 A single med spa replacing the workbook it uses to log daily sales. The clinic records a sale when the patient arrives, from a PC.
@@ -32,8 +32,9 @@ Next.js 16.4.5 + React 19 + shadcn/ui (Base UI) in `web/`; Supabase Postgres 17,
 - [memory/decisions.md](memory/decisions.md) — the long reasoning behind every rule above, and the payment, void and installment mechanics.
 - [docs/HANDOFF.md](docs/HANDOFF.md) — how to resume: scripts, current numbers, gotchas.
 - [docs/catalog-taxonomy.md](docs/catalog-taxonomy.md) · [docs/import-plan-consolidated.md](docs/import-plan-consolidated.md) · [docs/branding.md](docs/branding.md)
-- `supabase/migrations/` — 101 files, applied once each and recorded in `public.schema_migrations`. `scripts/apply_migrations.py` applies them; `scripts/run_checks.py` runs the 20 checks with their controls and compares the baseline.
-- `web/` routes cover the catalog (five tabs, search, margin), patients (searchable report, detail), sales details (date filter, pagination), the appointments agenda (book, resolve, reschedule), **Returns** (`/sales/returns`, the sales that can still give money back, plus the returns recorded) and **Voids** (`/sales/voids`, the sales with no money that never happened) as two separate sections, open items (`/open-items`, the installments still expected, with a payment recorded as a receipt and a charge cancelled with a reason), expenses by month (`/expenses`, closed months frozen), the sales report and the sale entry screen (`/sales/new`, written through `public.create_sale(...)`). The bot's bookings will come from the clinic's Google Calendar (secret iCal feed, blocked on account access); `/api/ghl/appointments` exists but is dormant on purpose — one feeder, never two.
+- `supabase/migrations/` — **119** files, applied once each and recorded in `public.schema_migrations`. `scripts/apply_migrations.py` applies them; `scripts/run_checks.py` runs the **22** checks with their controls and compares the baseline.
+- `web/` routes cover the catalog (five tabs, search, margin), patients (searchable report, detail), sales details (date filter, pagination, footer total, real status) and the sale page (`/sales/<id>`: lines, plan, receipts, returns), **Returns** (`/sales/returns`) and **Voids** (`/sales/voids`) as two separate sections, open items (`/open-items`), expenses by month (`/expenses`, closed months frozen), the sales entry screen (`/sales/new`, written through `public.create_sale(...)`), the dashboards and the sales report. **There is no appointments surface**: the clinic keeps its diary outside and the 51 imported rows are an archive (`docs/data/appointments-2026-11-21.json`). There is no `/api` route.
+- Deployment: [docs/deploy-hostinger.md](docs/deploy-hostinger.md) — root `web`, Node 22, npm, `next build --webpack`, three environment variables; every push to `master` deploys.
 
 ## Close-out
 A session is closed only when `memory/` matches the code:
